@@ -36,7 +36,7 @@ public class DataTypes {
 //		System.out.println("Data type string:"+ str);
 		for(int i=0;i<s.length;i++)
 		{
-			if (str.equals(s[i][0]) || str.equals(String.valueOf(Integer.parseInt(s[i][1]))))
+			if (str.equals(s[i][1]) || (Integer.parseInt(str) == Integer.parseInt(s[i][1])))
 			{
 				size=Integer.parseInt(s[i][2]);
 //				System.out.println("Return size: "+size);

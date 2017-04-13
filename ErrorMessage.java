@@ -14,6 +14,11 @@ public class ErrorMessage
 		hm.put(-103, "Cannot find");
 		hm.put(-104, "Table already exists");
 		hm.put(-105, "Incorrect column name");
+		hm.put(-106, "Insufficient columns");
+		hm.put(-107, "Primary key not present");
+		hm.put(-108, "Inserting null into not null column");
+		hm.put(-109, "Primary key must be integer type");
+		hm.put(-110, "Unrecognized constraint");
 		hm.put(-1000, "Error -1000: Unexpected error");
 		
 	}

@@ -59,19 +59,21 @@ public class DavisBasePromptExample {
 		File f2 = new File("davisbase_columns.tbl");
 		if (!f1.exists() || !f2.exists())
 		{
-			parseCreateString("create davisbase_tables (rowid int,table_name text)","meta");
-			parseCreateString("create davisbase_columns (rowid int,table_name text,column_name text,data_type text,ordinal_position tinyint,is_nullable text)","meta");
- 			parseInsertString("insert into davisbase_tables (table_name) values (\"davisbase_tables\")");
- 			parseInsertString("insert into davisbase_tables (table_name) values (\"davisbase_columns\")");
-  			parseInsertString("insert into davisbase_columns (table_name,column_name,data_type,ordinal_position,is_nullable) values (\"davisbase_tables\",\"rowid\",\"int\",\"1\",\"no\")");
-  			parseInsertString("insert into davisbase_columns (table_name,column_name,data_type,ordinal_position,is_nullable) values (\"davisbase_tables\",\"table_name\",\"text\",\"2\",\"no\")");
-  			parseInsertString("insert into davisbase_columns (table_name,column_name,data_type,ordinal_position,is_nullable) values (\"davisbase_columns\",\"rowid\",\"int\",\"1\",\"no\")");
-  			parseInsertString("insert into davisbase_columns (table_name,column_name,data_type,ordinal_position,is_nullable) values (\"davisbase_columns\",\"table_name\",\"text\",\"2\",\"no\")");
-  			parseInsertString("insert into davisbase_columns (table_name,column_name,data_type,ordinal_position,is_nullable) values (\"davisbase_columns\",\"column_name\",\"text\",\"3\",\"no\")");
-  			parseInsertString("insert into davisbase_columns (table_name,column_name,data_type,ordinal_position,is_nullable) values (\"davisbase_columns\",\"data_type\",\"text\",\"4\",\"no\")");
-  			parseInsertString("insert into davisbase_columns (table_name,column_name,data_type,ordinal_position,is_nullable) values (\"davisbase_columns\",\"ordinal_position\",\"tinyint\",\"5\",\"no\")");
-  			parseInsertString("insert into davisbase_columns (table_name,column_name,data_type,ordinal_position,is_nullable) values (\"davisbase_columns\",\"is_nullable\",\"text\",\"6\",\"no\")");		
-		}
+			parseCreateString("create davisbase_tables (rowid int,table_name text not null)","first");
+			parseCreateString("create davisbase_columns (rowid int,table_name text not null,column_name text not null,data_type text not null,ordinal_position tinyint not null,is_nullable text not null)","first");
+ 			insertDavis("insert into davisbase_tables (rowid,table_name) values (1,\"davisbase_tables\")","tables");
+ 			insertDavis("insert into davisbase_tables (rowid,table_name) values (2,\"davisbase_columns\")","tables");
+ 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (1,\"davisbase_tables\",\"rowid\",\"int\",\"0\",\"no\",\"pri\")","columns");
+ 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (2,\"davisbase_tables\",\"table_name\",\"text\",\"1\",\"no\",null)","columns");
+ 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (3,\"davisbase_columns\",\"rowid\",\"int\",\"0\",\"no\",\"pri\")","columns");
+ 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (4,\"davisbase_columns\",\"table_name\",\"text\",\"1\",\"no\",null)","columns");
+ 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (5,\"davisbase_columns\",\"column_name\",\"text\",\"2\",\"no\",null)","columns");
+ 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (6,\"davisbase_columns\",\"data_type\",\"text\",\"3\",\"no\",null)","columns");
+ 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (7,\"davisbase_columns\",\"ordinal_position\",\"tinyint\",\"4\",\"no\",null)","columns");
+ 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (8,\"davisbase_columns\",\"is_nullable\",\"text\",\"5\",\"no\",null)","columns");
+ 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (9,\"davisbase_columns\",\"column_key\",\"text\",\"6\",\"no\",null)","columns");
+ 			System.out.println("Davis tables created.");
+		}		
 
 		
 		/* Variable to collect user input from the prompt */
@@ -179,6 +181,7 @@ public class DavisBasePromptExample {
 					rownum++;
 					System.out.println("");	
 				}
+				System.out.println("");
 				System.out.println((rownum-2)+" rows displayed");
 				break;
 			case "drop":
@@ -187,7 +190,10 @@ public class DavisBasePromptExample {
 				break;
 			case "create":
 				sqlcode=parseCreateString(userCommand,"user");
-				System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
+				if (sqlcode == 0)
+					System.out.println("Table creation "+err.getValue(sqlcode));
+				else
+					System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
 				break;
 			case "insert":
 				sqlcode=parseInsertString(userCommand);
@@ -247,7 +253,7 @@ public class DavisBasePromptExample {
 		File f = new File(tableFileName);
 		if (!f.exists())
 		{
-			sqlcode= -102;
+			sqlcode=-102;
 			System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
 			return null;
 		}
@@ -262,7 +268,8 @@ public class DavisBasePromptExample {
 				System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
 				return null;
 			}
-			String clause=tokens.get(i++);
+//			String clause=tokens.get(i++);
+			String clause= queryString.substring(queryString.indexOf("where")+5).trim();
 			ArrayList<String> clause_list= new ArrayList<String>(Arrays.asList(clause.split("=")));
  			pos=findPosition(clause_list.get(0));
  			int l=0;
@@ -530,7 +537,8 @@ public class DavisBasePromptExample {
 				System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
 				return null;
 			}
-			String clause=tokens.get(i++);
+//			String clause=tokens.get(i++);
+			String clause= queryString.substring(queryString.indexOf("where")+5).trim();
 			ArrayList<String> clause_list= new ArrayList<String>(Arrays.asList(clause.split("=")));
  			pos=findPosition(clause_list.get(0));
  			int l=0;
@@ -574,7 +582,7 @@ public class DavisBasePromptExample {
 			tableFile.seek(1);
 			numRec=tableFile.readByte();
 			//HARD CODED
-			numCol=5;
+			numCol=7;
 			
 			String output[][]=new String[numRec][numCol];
  			String filter_output[][]=null;
@@ -634,20 +642,26 @@ public class DavisBasePromptExample {
 				//HARD CODED
 	  				switch (column_list.get(k))
 	  				{
-	  				case "table_name":
+	  				case "row_id":
 	  					allowed_pos.add(0);
 	  					break;
-	  				case "column_name":
+	  				case "table_name":
 	  					allowed_pos.add(1);
 	  					break;
-	  				case "data_type":
+	  				case "column_name":
 	  					allowed_pos.add(2);
 	  					break;
-	  				case "ordinal_position":
+	  				case "data_type":
 	  					allowed_pos.add(3);
 	  					break;
-	  				case "is_nullable":
+	  				case "ordinal_position":
 	  					allowed_pos.add(4);
+	  					break;
+	  				case "is_nullable":
+	  					allowed_pos.add(5);
+	  					break;
+	  				case "column_key":
+	  					allowed_pos.add(6);
 	  					break;
 	  				}
  			}
@@ -712,13 +726,12 @@ public class DavisBasePromptExample {
 	public static int parseCreateString(String createTableString,String str) {
 		int sqlcode=0;
 		int i=1;
-//		System.out.println("STUB: Calling your method to create a table");
 //		System.out.println("Parsing the string:\"" + createTableString + "\"");
 		ArrayList<String> createTokens = new ArrayList<String>(Arrays.asList(createTableString.split(" ")));
 		
 		/* Define table file name */
 		String tableName=createTokens.get(i++);
-		String tableFileName =  tableName+ ".tbl";
+		String tableFileName = tableName+ ".tbl";
 		File f = new File(tableFileName);
 		if (f.exists())
 			return -104;
@@ -730,37 +743,69 @@ public class DavisBasePromptExample {
 			/*  Create RandomAccessFile tableFile in read-write mode.
 			 *  Note that this doesn't create the table file in the correct directory structure
 			 */
-			RandomAccessFile tableFile = new RandomAccessFile(tableFileName, "rw");
-			tableFile.setLength(pageSize);
-//			int recordLocation = 0;
-//			int currentPage = 0;
-//			int pageLocation = pageSize * currentPage;
-			// Page code
-			tableFile.writeByte(13);
-			//Number of records in page
-			tableFile.writeByte(0);
-			//Last occupied memory location
-			tableFile.writeShort(pageSize);
-			//Right sibling(4 bytes)
-			for(int j=0;j<4;j++)
-				tableFile.writeByte(255);
-			
-			tableFile.close();
-			if (str.equals("user") )
-			{
-				parseInsertString("insert into davisbase_tables (table_name) values (\""+tableName+"\")");
+				RandomAccessFile tableFile = new RandomAccessFile(tableFileName, "rw");
+				tableFile.setLength(pageSize);
+	//			int recordLocation = 0;
+	//			int currentPage = 0;
+	//			int pageLocation = pageSize * currentPage;
+				// Page code
+				tableFile.writeByte(13);
+				//Number of records in page
+				tableFile.writeByte(0);
+				//Last occupied memory location
+				tableFile.writeShort(pageSize);
+				//Right sibling(4 bytes)
+				for(int j=0;j<4;j++)
+					tableFile.writeByte(255);
 				
-				//Extract column list
-				String c_list=createTableString.substring(createTableString.indexOf("(")+1,createTableString.indexOf(")"));
-				ArrayList<String> column_list = new ArrayList<String>(Arrays.asList(c_list.split(",")));
-				for (int j=0;j< column_list.size();j++)
+				tableFile.close();
+				
+				if (!str.equals("first"))
 				{
-					ArrayList<String> c = new ArrayList<String>(Arrays.asList(column_list.get(j).split(" ")));
-					parseInsertString("insert into davisbase_columns (table_name,column_name,data_type,ordinal_position,is_nullable) "
-						+ "values (\""+tableName+"\",\""+c.get(0)+"\",\""+c.get(1)+"\",\""+j+"\",\"no\")");
+					insertDavis("insert into davisbase_tables (rowid,table_name) values (0,\""+tableName+"\")","meta");
+					
+					//Extract column list
+					String c_list=createTableString.substring(createTableString.indexOf("(")+1,createTableString.indexOf(")"));
+					ArrayList<String> column_list = new ArrayList<String>(Arrays.asList(c_list.split(",")));
+					for (int j=0;j< column_list.size();j++)
+					{
+						ArrayList<String> c = new ArrayList<String>(Arrays.asList(column_list.get(j).split(" ")));
+						String prim=null;
+						String nullable=null;
+						if (j==0)
+						{
+							if (!c.get(1).equals("int"))
+							{
+								sqlcode=-109;
+								return sqlcode;
+							}
+							else
+							{
+								nullable="no";
+								prim="pri";
+							}
+						}
+						else
+						{	
+							if (c.size() > 2)
+							{
+								if (c.get(2).equals("not") && c.get(3).equals("null"))
+								{
+									nullable="no";
+								}
+								else
+								{
+									sqlcode=-110;
+									return sqlcode;
+								}
+							}
+						}
+						insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) "
+								+ "values (0,\""+tableName+"\",\""+c.get(0)+"\",\""+c.get(1)+"\",\""+j+"\",\""+nullable+"\",\""+prim+"\")","meta");
+					}
+					return sqlcode;
 				}
-			}
-			System.out.println(tableFileName+" created.");
+			
 		}
 		catch(Exception e) 
 		{
@@ -770,6 +815,7 @@ public class DavisBasePromptExample {
 
 		return sqlcode;
 	}
+	
 	
 	public static int parseInsertString(String insertString) 
 	{
@@ -807,8 +853,7 @@ public class DavisBasePromptExample {
 			Stack<Character> st = new Stack<Character>();
 			StringBuffer word= new StringBuffer();
 //			System.out.println(column_values);
-			int recordSize=0;
-			int totrecordSize=0;
+
 			while (k < column_values.length())
 			{
 				char ch=column_values.charAt(k++);		
@@ -864,57 +909,104 @@ public class DavisBasePromptExample {
 			
 			tableFile = new RandomAccessFile(tableFileName, "rw");
 			tableFile.setLength(pageSize);
-			for (int j=0;j<column_list.size();j++)
+			
+			//Calculate the number of columns to write
+			int numCol=0;
+			int recordSize=0;
+			int totrecordSize=0;
+			String table_data[][]=queryDavis("select column_name,data_type,ordinal_position,is_nullable,column_key from davisbase_columns where table_name=\""+tableName+"\"");
+			numCol=table_data.length;
+ 			ArrayList<Integer> given_pos=new ArrayList<Integer>();
+			//Check column list
+			for (int m=0;m<column_list.size();m++)
 			{
-				//Get column datatype from davisbase_column
-//				System.out.println(column_list.get(j));
-//				String data_type=findDataType(column_list.get(j));
-				String data_type[][]=null;
-				String type=null;
-//				if (column_list.get(j).equals("davisbase_tables"))
-//				{
-//					type="text";
-//				}
-//				else if(column_list.get(j).equals("davisbase_columns"))
-//				{
-//					switch(column_list.get(j))
-//					{
-//					case "table_name":
-//					case "column_name":
-//					case "data_type":
-//					case "is_nullable":
-//						type="text";
-//						break;
-//					case "ordinal_position":
-//						type="tinyint";
-//					}
-//				}
-//				else
-//				{
-					data_type=parseQueryString("select table_name,data_type from davisbase_columns where column_name=\""+column_list.get(j)+"\"");
-					for (int m=0; m<data_type.length; m++)
-					{
-						if (data_type[m][0].equals(tableName))
-						{
-							type=data_type[m][1];
-						break;
-						}
-					}
-//				}
-//				System.out.println("Data type: "+data_type[0][0]);
-				int size=0;
-				size=dt.getSize(type);
-				if (size==0)
+				boolean found=false;
+				for (int n=0;n<numCol;n++)
 				{
-					size=column_value_list.get(j).length();
+					int size=0;
+					if (column_list.get(m).equals(table_data[n][0]))
+					{
+						given_pos.add(n);
+						size=dt.getSize(table_data[n][1]);	
+						if (size==0)
+						{
+							size=column_value_list.get(m).length();
+						}
+						found=true;
+						break;
+					}
+					recordSize+=size;
 				}
-				recordSize+=size;
+				// Incorrect column name
+				if (!found)
+				{
+					sqlcode=-105;
+					return sqlcode;
+				}
 			}
-//			System.out.println(column_value_list.size());
-// 			System.out.println(recordSize);
-			totrecordSize=2+4+1+column_value_list.size()+recordSize;
-//			System.out.println(totrecordSize);
+			
+			//Check primary key exists
+			if (!given_pos.contains(0))
+			{
+				sqlcode=-107;
+				return sqlcode;
+			}
+			
+			//Column list mismatch
+			if (column_list.size() != column_value_list.size())
+			{
+				sqlcode=-106;
+				return sqlcode;
+			}
+			
+			String [] c_value=new String[numCol];
+			Integer [] bytes=new Integer[numCol];
+			Integer [] code= new Integer[numCol];
+			for (int j=0;j<numCol;j++)
+			{
+				code[j]=dt.getCode(table_data[j][3]);
+				bytes[j]=dt.getSize(String.valueOf(code[j]));
+				if(given_pos.contains(j))
+				{
+					int m=given_pos.indexOf(j);
+					c_value[j]=column_value_list.get(m);
+				}
+				else
+				
+				//Null code
+				if (c_value[j].equals(null))
+				{
+					if (table_data[j][1].equals("no"))
+					{
+						sqlcode=-108;
+						return sqlcode;
+					}
+					switch(code[j])
+					{
+					case 4:
+						code[j]=0;
+						break;
+					case 5:
+						code[j]=1;
+						break;
+					case 6:
+						code[j]=2;
+						break;
+					case 9:
+						code[j]=3;
+						break;
+					}
+				}
+				//Text code
+				if (code[j]==12)
+				{
+					code[j]+=c_value[j].length();
+				}
+			}
+			
 			//Page header
+			//CHECK POSITION AND DUPLICATE
+			totrecordSize=2+4+1+column_value_list.size()+recordSize;
 			tableFile.seek(1);
 			int numRec=tableFile.readByte();
 			tableFile.seek(1);
@@ -936,73 +1028,294 @@ public class DavisBasePromptExample {
 				//Number of columns
 			tableFile.writeByte(column_value_list.size());
 				//Code of each column
-			if (column_list.size() != column_value_list.size())
+			for (int j=0;j<numCol;j++)
 			{
-				System.out.println("Incorrect number of columns"+column_list.size()+","+column_value_list.size());
-				return -101;
-			}	
-			for (int j=0;j<column_list.size();j++)
+				tableFile.writeByte(code[j]);
+			}
+						
+			
+			//Record 
+			for (int j=0; j<numCol;j++)
 			{
-				String data_type[][]=queryDavis("select table_name,data_type from davisbase_columns where column_name=\"+column_list.get(j)+\"");
-//				System.out.println("Data type: "+data_type[0][0]);
-				String type=null;
-				for (int m=0; m<data_type.length; m++)
+				switch (bytes[j])
 				{
-					if (data_type[m][0].equals(tableName))
-					{
-						type=data_type[m][1];
+					case 0:
+						if (!c_value[j].isEmpty())
+							tableFile.writeBytes(c_value[j]);
 						break;
-					}
-				}
-				int c=dt.getCode(type);
+					case 1:
+						if (!c_value[j].isEmpty())
+							tableFile.writeByte(Integer.parseInt(c_value[j]));
+						break;
+					case 2:
+						if (!c_value[j].isEmpty())
+							tableFile.writeShort(Integer.parseInt(c_value[j]));
+						break;
+					case 4:
+						if (!c_value[j].isEmpty())
+							tableFile.writeInt(Integer.parseInt(c_value[j]));
+						break;
+					case 8:
+						if (!c_value[j].isEmpty())
+							tableFile.writeDouble(Double.parseDouble(c_value[j]));
+						break;
+				} 
+			}
+			tableFile.close();
+		}
+		catch(Exception e) 
+		{
+			System.out.println(err.getValue(-1000));
+			e.printStackTrace();
+		}
+		finally 
+		{
+			try
+			{
+				tableFile.close();
+			}
+			catch(Exception e) 
+			{
+				System.out.println(err.getValue(-1000));
+				e.printStackTrace();
+			}
+	    }
+	return sqlcode;
+	}
+	
+	public static int insertDavis(String insertString,String str) 
+	{
+		RandomAccessFile tableFile=null;
+		DataTypes dt=new DataTypes();
+		int sqlcode=0;
+		int i=1;
+		ArrayList<String> createTokens = new ArrayList<String>(Arrays.asList(insertString.split(" ")));
+		ArrayList<String> column_value_list = new ArrayList<String>();
+		try {
+			//Validate syntax
+			if (! createTokens.get(i++).equals("into"))
+			{
+				sqlcode=-101;
+				return sqlcode;
 				
-				//If text
-				if (c==12)
-				{
-					c+=column_value_list.get(j).length();
+			}
+			String tableName=createTokens.get(i++);
+			String tableFileName = tableName+ ".tbl";
+			File f = new File(tableFileName);
+			if (!f.exists())
+			{
+				sqlcode=-102;
+				return sqlcode;
+			}
+			String columns=createTokens.get(i++);
+			//Extract column list
+			String c_list=insertString.substring(insertString.indexOf("(")+1,insertString.indexOf(")"));
+			ArrayList<String> column_list = new ArrayList<String>(Arrays.asList(c_list.split(",")));
+//			System.out.println(column_list);
+			
+			if (!createTokens.get(i++).equals("values"))
+				return -101;
+			
+			//Extract values
+			String column_values=insertString.substring(insertString.indexOf("values")+7,insertString.lastIndexOf(')')+1);
+			int k=0;
+			Stack<Character> st = new Stack<Character>();
+			StringBuffer word= new StringBuffer();
+//			System.out.println(column_values);
+
+			while (k < column_values.length())
+			{
+				char ch=column_values.charAt(k++);		
+//			    System.out.println("character:- "+ch);
+			    switch (ch)
+			    {
+			    	case '(':
+			    		st.push('(');
+			    		break;
+			    	case ')':	
+			    		if (st.peek() == '(')
+						{
+							column_value_list.add(word.toString());
+//							System.out.println("End Word cumul: "+word);
+							word.setLength(0);
+						}
+			    		st.pop();
+			    		break;
+			    	case ',':
+						if (st.peek() == '(')
+						{
+							column_value_list.add(word.toString());
+//							System.out.println("Word cumul: "+word);
+							word.setLength(0);
+						}
+						else
+						{
+							word.append(ch);
+//							System.out.println(word);
+						}
+						break;
+			    	case '"':	
+			    		if (st.peek() == '(')
+			    			st.push('"');
+			    		else
+			    			st.pop();
+			    		break;
+			    	case ' ':
+			    		break;
+			    	default:
+			    		word.append(ch);
+//			    		System.out.println("Word: "+word);
+			    		break;
 				}
-//				System.out.println(totrecordSize);
-// 				System.out.println(recordSize);
-// 				System.out.println(c);
- 				tableFile.writeByte(c);
+//			    System.out.println("Stack:- "+st.peek());	
+			}
+			if (!st.isEmpty())
+			{
+				sqlcode=-101;
+				return sqlcode;
+			}
+//			System.out.println(column_value_list);	
+			
+			tableFile = new RandomAccessFile(tableFileName, "rw");
+			tableFile.setLength(pageSize);
+			
+			//Calculate the number of columns to write
+			int numCol=0;
+			int recordSize=0;
+			int totrecordSize=0;
+			String table_data[][]=null;
+			if(str.equals("tables") || str.equals("columns"))
+			{
+				table_data=findData(str);
+			}
+			else
+			{
+				table_data=queryDavis("select row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key from davisbase_columns where table_name=\""+tableName+"\"");
+			}
+			numCol=column_list.size();
+ 			ArrayList<Integer> given_pos=new ArrayList<Integer>();
+			//Check column list
+			for (int m=0;m<numCol;m++)
+			{
+				String type=findDataType(column_list.get(m));
+				int code=dt.getCode(type);
+				int size=dt.getSize(String.valueOf(code));	
+				if (size==0)
+				{
+					size=column_value_list.get(m).length();
+				}
+				recordSize+=size;
 			}
 			
 			
-			//Record 
-//			System.out.println(currentLocation);
-			for (int j=0; j<column_value_list.size();j++)
+			String [] c_value=new String[numCol];
+			Integer [] bytes=new Integer[numCol];
+			Integer [] code= new Integer[numCol];
+			for (int j=0;j<numCol;j++)
 			{
-//				
-				String data_type[][]=parseQueryString("select table_name,data_type from davisbase_columns where column_name=\""+column_list.get(j)+"\"");
-//				System.out.println("Data type: "+data_type[0][0]);
-				int bytes=0;
-				String type=null;
-				for (int m=0; m<data_type.length; m++)
+				code[j]=dt.getCode(table_data[j][3]);
+				bytes[j]=dt.getSize(String.valueOf(code[j]));
+				c_value[j]=column_value_list.get(j);
+				
+				//Null code
+				if (c_value[j].equals(null))
 				{
-					if (data_type[m][0].equals(tableName))
+					switch(code[j])
 					{
-						type=data_type[m][1];
+					case 4:
+						code[j]=0;
+						break;
+					case 5:
+						code[j]=1;
+						break;
+					case 6:
+						code[j]=2;
+						break;
+					case 9:
+						code[j]=3;
 						break;
 					}
 				}
-				bytes=dt.getSize(type);
-//				System.out.println(bytes);
-				switch (bytes)
+				//Text code
+				if (code[j]==12)
+				{
+					code[j]+=c_value[j].length();
+				}
+			}
+			
+			//Page header
+			totrecordSize=2+4+1+column_value_list.size()+recordSize;
+			tableFile.seek(1);
+			int numRec=tableFile.readByte();
+			
+			//calc rowid
+			int rowid=0;
+			if (numRec == 0)
+				rowid=1;
+			else
+			{
+				//Read address of the used record memory location
+				int last_key_pos=numRec*2+6;
+				tableFile.seek(last_key_pos);
+				int last_rec_loc=tableFile.readShort();
+				
+				//Read rowid of last used record memory location
+				tableFile.seek(last_rec_loc+2);
+				int last_rowid=tableFile.readInt();
+				rowid=last_rowid+1;
+			}
+			tableFile.seek(1);
+			tableFile.write(numRec+1);
+			tableFile.seek(2);
+			int currentLocation=tableFile.readShort();
+			tableFile.seek(2);
+			tableFile.writeShort(currentLocation-totrecordSize);	
+			tableFile.seek(numRec*2+8);
+			tableFile.writeShort(currentLocation-totrecordSize);
+			
+			//Record header
+			tableFile.seek(currentLocation-totrecordSize);
+				//payload
+			int payload=1+column_value_list.size()+recordSize;
+			tableFile.writeShort(payload);
+				//RowID
+			
+			tableFile.writeInt(rowid);
+				//Number of columns
+			tableFile.writeByte(column_value_list.size());
+				//Code of each column
+			for (int j=0;j<numCol;j++)
+			{
+				tableFile.writeByte(code[j]);
+			}
+						
+			//Record 
+			//rowid=primary key
+			tableFile.writeInt(rowid);
+			//Write rest of record
+			for (int j=1; j<numCol;j++)
+			{
+				switch (bytes[j])
 				{
 					case 0:
-						tableFile.writeBytes(column_value_list.get(j));
+						if (!c_value[j].isEmpty())
+							tableFile.writeBytes(c_value[j]);
 						break;
 					case 1:
-						tableFile.writeByte(Integer.parseInt(column_value_list.get(j)));
+						if (!c_value[j].isEmpty())	
+							tableFile.writeByte(Integer.parseInt(c_value[j]));
 						break;
 					case 2:
-						tableFile.writeShort(Integer.parseInt(column_value_list.get(j)));
+						if (!c_value[j].isEmpty())
+							tableFile.writeShort(Integer.parseInt(c_value[j]));
 						break;
 					case 4:
-						tableFile.writeInt(Integer.parseInt(column_value_list.get(j)));
+						if (!c_value[j].isEmpty())
+							tableFile.writeInt(Integer.parseInt(c_value[j]));
 						break;
 					case 8:
-						tableFile.writeDouble(Double.parseDouble(column_value_list.get(j)));
+						if (!c_value[j].isEmpty())
+							tableFile.writeDouble(Double.parseDouble(c_value[j]));
 						break;
 				} 
 			}
@@ -1030,40 +1343,129 @@ public class DavisBasePromptExample {
 	
 	static String findDataType(String str)
 	{
+		//HARD CODED
 		switch(str)
 		{
 		case "table_name":
 		case "column_name":
 		case "data_type":
 		case "is_nullable":
-		case "emp_name":
+		case "column_key":
 			return "text";
 		case "ordinal_position":
 			return "tinyint";
-		case "emp_id":
+		case "rowid":
 			return "int";
-		case "ph_num":
-			return "int";
+
 		default:
 			return null;
 		}
 	}
 	static int findPosition(String str)
 	{
+		//HARD CODED
 		switch(str)
 		{
-		case "table_name":
+		case "rowid":
 			return 0;
-		case "column_name":
+		case "table_name":
 			return 1;
-		case "data_type":
+		case "column_name":
 			return 2;
-		case "ordinal_position":
+		case "data_type":
 			return 3;
-		case "is_nullable":
+		case "ordinal_position":
 			return 4;
+		case "is_nullable":
+			return 5;
+		case "column_key":
+			return 6;
 		default:
 			return 99;
 		}	
+	}
+	static String[][] findData(String str)
+	{
+		String table_data[][]=null;
+		if (str.equals("tables"))
+		{
+			table_data=new String[2][7];
+			
+			table_data[0][0]="1";
+			table_data[0][1]="davisbase_tables";
+			table_data[0][2]="rowid";
+			table_data[0][3]="int";
+			table_data[0][4]="0";
+			table_data[0][5]="no";
+			table_data[0][6]="pri";
+
+			table_data[1][0]="2";
+			table_data[1][1]="davisbase_tables";
+			table_data[1][2]="table_name";
+			table_data[1][3]="text";
+			table_data[1][4]="1";
+			table_data[1][5]="no";
+			table_data[1][6]=null;
+		}
+		else if (str.equals("columns"))
+		{
+			table_data=new String[7][7];
+			table_data[0][0]="3";
+			table_data[0][1]="davisbase_columns";
+			table_data[0][2]="rowid";
+			table_data[0][3]="int";
+			table_data[0][4]="0";
+			table_data[0][5]="no";
+			table_data[0][6]="pri";
+			
+			table_data[1][0]="4";
+			table_data[1][1]="davisbase_columns";
+			table_data[1][2]="table_name";
+			table_data[1][3]="text";
+			table_data[1][4]="1";
+			table_data[1][5]="no";
+			table_data[1][6]=null;
+			
+			table_data[2][0]="5";
+			table_data[2][1]="davisbase_columns";
+			table_data[2][2]="column_name";
+			table_data[2][3]="text";
+			table_data[2][4]="2";
+			table_data[2][5]="no";
+			table_data[2][6]=null;
+			
+			table_data[3][0]="6";
+			table_data[3][1]="davisbase_columns";
+			table_data[3][2]="data_type";
+			table_data[3][3]="text";
+			table_data[3][4]="3";
+			table_data[3][5]="no";
+			table_data[3][6]=null;
+			
+			table_data[4][0]="7";
+			table_data[4][1]="davisbase_columns";
+			table_data[4][2]="ordinal_position";
+			table_data[4][3]="tinyint";
+			table_data[4][4]="4";
+			table_data[4][5]="no";
+			table_data[4][6]=null;
+			
+			table_data[5][0]="8";
+			table_data[5][1]="davisbase_columns";
+			table_data[5][2]="is_nullable";
+			table_data[5][3]="text";
+			table_data[5][4]="5";
+			table_data[5][5]="no";
+			table_data[5][6]=null;
+			
+			table_data[6][0]="9";
+			table_data[6][1]="davisbase_columns";
+			table_data[6][2]="column_key";
+			table_data[6][3]="text";
+			table_data[6][4]="6";
+			table_data[6][5]="no";
+			table_data[6][6]=null;
+		}
+		return table_data;
 	}
 }
