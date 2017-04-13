@@ -921,13 +921,14 @@ public class DavisBasePromptExample {
 			for (int m=0;m<column_list.size();m++)
 			{
 				boolean found=false;
+				int size=0;
 				for (int n=0;n<numCol;n++)
 				{
-					int size=0;
 					if (column_list.get(m).equals(table_data[n][0]))
 					{
 						given_pos.add(n);
-						size=dt.getSize(table_data[n][1]);	
+						int code=dt.getCode(table_data[n][1]);
+						size=dt.getSize(String.valueOf(code));	
 						if (size==0)
 						{
 							size=column_value_list.get(m).length();
@@ -935,7 +936,7 @@ public class DavisBasePromptExample {
 						found=true;
 						break;
 					}
-					recordSize+=size;
+					
 				}
 				// Incorrect column name
 				if (!found)
@@ -943,6 +944,7 @@ public class DavisBasePromptExample {
 					sqlcode=-105;
 					return sqlcode;
 				}
+				recordSize+=size;
 			}
 			
 			//Check primary key exists
@@ -964,7 +966,7 @@ public class DavisBasePromptExample {
 			Integer [] code= new Integer[numCol];
 			for (int j=0;j<numCol;j++)
 			{
-				code[j]=dt.getCode(table_data[j][3]);
+				code[j]=dt.getCode(table_data[j][1]);
 				bytes[j]=dt.getSize(String.valueOf(code[j]));
 				if(given_pos.contains(j))
 				{
