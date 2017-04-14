@@ -912,7 +912,12 @@ public class DavisBasePromptExample {
 		try
 		{
 			tableFile = new RandomAccessFile(tableFileName, "rw");
-			String [][] table_name=parseQueryString("select "+primary_key_column+" from "+tableName+" where "+clause);
+			String [][] table_name=null;
+			if (hasWhere)
+				table_name=parseQueryString("select "+primary_key_column+" from "+tableName+" where "+clause);
+			else
+				
+				table_name=parseQueryString("select * from "+tableName);
 			for (int r=2; r<table_name.length; r++)
 			{
 				int delete_key=Integer.valueOf(table_name[r][0]);
@@ -1537,6 +1542,8 @@ public class DavisBasePromptExample {
 		int code=0;
 		int given_pos=99;
 		String search_keyword = null;
+		String primary_key_column=null;
+		String clause=null;
 		DataTypes dt=new DataTypes();
 		ArrayList<String> tokens = new ArrayList<String>(Arrays.asList(queryString.split(" ")));
 		
@@ -1608,7 +1615,7 @@ public class DavisBasePromptExample {
 				return sqlcode;
 			}
 
-			String clause= queryString.substring(queryString.indexOf("where")+5).trim();
+			clause= queryString.substring(queryString.indexOf("where")+5).trim();
 			ArrayList<String> clause_list= new ArrayList<String>(Arrays.asList(clause.split("=")));
 			String [][] table_name=queryDavis("select column_name,column_key from davisbase_columns where table_name=\""+tableName+"\"");
 			boolean primary_key=false;
@@ -1616,150 +1623,164 @@ public class DavisBasePromptExample {
 			{
 				if (table_name[j][1].equals("pri"))
 				{
+					primary_key_column=table_name[j][0];
 					if (table_name[j][0].equals(clause_list.get(0)))
 						primary_key=true;
 				}
 			}
-			//Primary key not selected
-			if (!primary_key)
+			//Primary key selected
+			if (primary_key)
 			{
-				sqlcode=-111;
-				return sqlcode;
-			}
-			try
-			{
-				key=Integer.valueOf(clause_list.get(1));
-			}
-            catch(NumberFormatException e)
-            {
-            	sqlcode=-112;
-				return sqlcode;
-            }
-			String table_data[][]=queryDavis("select column_name,data_type,ordinal_position,is_nullable,column_key from davisbase_columns where table_name=\""+tableName+"\"");
-			numCol=table_data.length;
-			boolean found=false;
-			int size=0;
-			
-			//Check column
-			for (int n=0;n<numCol;n++)
-			{
-				if (column.equals(table_data[n][0]))
+				try
 				{
-					given_pos=n;
-					code=dt.getCode(table_data[n][1]);
-					size=dt.getSize(String.valueOf(code));	
-					if (size==0)
-					{
-						size=column.length();
-					}
-					found=true;
-					break;
+					key=Integer.valueOf(clause_list.get(1));
 				}
-			}
-			if (!found)
-			{
-				sqlcode=-105;
-				return sqlcode;
-			}
-
-			code=dt.getCode(table_data[given_pos][1]);
-			//Null code
-			if (value.equals(null))
-			{
-				if (table_data[given_pos][1].equals("no"))
-				{
-					sqlcode=-108;
+	            catch(NumberFormatException e)
+	            {
+	            	sqlcode=-112;
 					return sqlcode;
-				}
-				switch(code)
-				{
-				case 4:
-					code=0;
-					break;
-				case 5:
-					code=1;
-					break;
-				case 6:
-					code=2;
-					break;
-				case 9:
-					code=3;
-					break;
-				}
+	            }
 			}
-			//Text code
-			if (code==12)
+			
+			
+		}
+		String table_data[][]=queryDavis("select column_name,data_type,ordinal_position,is_nullable,column_key from davisbase_columns where table_name=\""+tableName+"\"");
+		numCol=table_data.length;
+		boolean found=false;
+		int size=0;
+		
+		//Check column
+		for (int n=0;n<numCol;n++)
+		{
+			if (column.equals(table_data[n][0]))
 			{
-				code+=value.length();
+				given_pos=n;
+				code=dt.getCode(table_data[n][1]);
+				size=dt.getSize(String.valueOf(code));	
+				if (size==0)
+				{
+					size=column.length();
+				}
+				found=true;
+				break;
 			}
+		}
+		if (!found)
+		{
+			sqlcode=-105;
+			return sqlcode;
+		}
+
+		code=dt.getCode(table_data[given_pos][1]);
+		//Null code
+		if (value.equals(null))
+		{
+			if (table_data[given_pos][1].equals("no"))
+			{
+				sqlcode=-108;
+				return sqlcode;
+			}
+			switch(code)
+			{
+			case 4:
+				code=0;
+				break;
+			case 5:
+				code=1;
+				break;
+			case 6:
+				code=2;
+				break;
+			case 9:
+				code=3;
+				break;
+			}
+		}
+		//Text code
+		if (code==12)
+		{
+			code+=value.length();
 		}
 		try 
 		{
 			tableFile = new RandomAccessFile(tableFileName, "rw");
-			tableFile.seek(1);
-			numRec=tableFile.readByte();
-			boolean found=false;
-			int currentLocation=0;
-			int num_of_Col=0;
-			for(int j=0;j<numRec;j++)
+			String [][] table_name=null;
+			if (hasWhere)
+				table_name=parseQueryString("select "+primary_key_column+" from "+tableName+" where "+clause);
+			else
+				table_name=parseQueryString("select * from "+tableName);
+			
+			for (int r=2; r<table_name.length; r++)
 			{
-				int key_location=j*2+8;
+				int update_key=Integer.valueOf(table_name[r][0]);
+				tableFile.seek(1);
+				numRec=tableFile.readByte();
+				found=false;
+				int currentLocation=0;
+				int num_of_Col=0;
+				for(int j=0;j<numRec;j++)
+				{
+					int key_location=j*2+8;
+					if (!found)
+					{
+						tableFile.seek(key_location);
+						int data_addr=tableFile.readShort();
+						tableFile.seek(data_addr+6);
+						int num_col=tableFile.readByte();
+						tableFile.seek(data_addr+6+num_col+1);
+						int rec_key=tableFile.readInt();
+						if (!found && update_key==rec_key)
+						{
+							found=true;
+							currentLocation=data_addr;
+							num_of_Col=num_col;
+							break;
+						}	
+					}
+				}
 				if (!found)
 				{
-					tableFile.seek(key_location);
-					int data_addr=tableFile.readShort();
-					tableFile.seek(data_addr+6);
-					int num_col=tableFile.readByte();
-					tableFile.seek(data_addr+6+num_col+1);
-					int rec_key=tableFile.readInt();
-					if (!found && key==rec_key)
-					{
-						found=true;
-						currentLocation=data_addr;
-						num_of_Col=num_col;
-						break;
-					}	
+					sqlcode=100;
+					return sqlcode;
 				}
-			}
-			if (!found)
-			{
-				sqlcode=100;
-				return sqlcode;
-			}
-			else
-			{
-				//Record header
-				//CHECK different string length
-				//Change code
-				tableFile.seek(currentLocation+7+given_pos);
-				tableFile.writeByte(code);
-				//Change value
-				int code_loc=currentLocation+7;
-				int rec_len=0;
-				int prev_len=0;
-				int size=0;
-				int c=0;
-				for(int j=0;j<=given_pos;j++)
-				{	
-					prev_len=rec_len;
-					tableFile.seek(code_loc+j);
-					c=tableFile.readByte();
-					size=dt.getSize(String.valueOf(c));
-					if (c>=12)
-					{
-						size=c-12;
-					}
-					rec_len+=size;					
-				}
-				tableFile.seek(currentLocation+6+num_of_Col+prev_len+1);
-				tableFile.writeBytes(value);
-				//Remaining bytes if string is smaller
-				if (c>=12)
-				for (int j=0;j<size-value.length();j++)
+				else
 				{
-					tableFile.writeByte(0);
+					//Record header
+					//CHECK different string length
+					//Change code
+					tableFile.seek(currentLocation+7+given_pos);
+					tableFile.writeByte(code);
+					//Change value
+					int code_loc=currentLocation+7;
+					int rec_len=0;
+					int prev_len=0;
+					size=0;
+					int c=0;
+					for(int j=0;j<=given_pos;j++)
+					{	
+						prev_len=rec_len;
+						tableFile.seek(code_loc+j);
+						c=tableFile.readByte();
+						size=dt.getSize(String.valueOf(c));
+						if (c>=12)
+						{
+							size=c-12;
+						}
+						rec_len+=size;					
+					}
+					tableFile.seek(currentLocation+6+num_of_Col+prev_len+1);
+					tableFile.writeBytes(value);
+					//Remaining bytes if string is smaller
+					if (c>=12)
+					for (int j=0;j<size-value.length();j++)
+					{
+						tableFile.writeByte(0);
+					}
 				}
 			}
+			tableFile.close();
+			if (table_name.length > 2)
+			System.out.println((table_name.length-2)+" rows affected.");
 		}
 		catch(Exception e) 
 		{
