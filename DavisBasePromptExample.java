@@ -2,13 +2,10 @@ package db;
 
 import java.io.RandomAccessFile;
 import java.io.File;
-import java.io.FileReader;
 import java.util.Scanner;
-import java.util.SortedMap;
 import java.util.Stack;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import db.DataTypes;
 import db.ErrorMessage;
 
@@ -59,19 +56,19 @@ public class DavisBasePromptExample {
 		File f2 = new File("davisbase_columns.tbl");
 		if (!f1.exists() || !f2.exists())
 		{
-			parseCreateString("create davisbase_tables (rowid int,table_name text not null)","first");
-			parseCreateString("create davisbase_columns (rowid int,table_name text not null,column_name text not null,data_type text not null,ordinal_position tinyint not null,is_nullable text not null)","first");
- 			insertDavis("insert into davisbase_tables (rowid,table_name) values (1,\"davisbase_tables\")","tables");
- 			insertDavis("insert into davisbase_tables (rowid,table_name) values (2,\"davisbase_columns\")","tables");
- 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (1,\"davisbase_tables\",\"rowid\",\"int\",\"0\",\"no\",\"pri\")","columns");
- 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (2,\"davisbase_tables\",\"table_name\",\"text\",\"1\",\"no\",null)","columns");
- 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (3,\"davisbase_columns\",\"rowid\",\"int\",\"0\",\"no\",\"pri\")","columns");
- 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (4,\"davisbase_columns\",\"table_name\",\"text\",\"1\",\"no\",null)","columns");
- 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (5,\"davisbase_columns\",\"column_name\",\"text\",\"2\",\"no\",null)","columns");
- 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (6,\"davisbase_columns\",\"data_type\",\"text\",\"3\",\"no\",null)","columns");
- 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (7,\"davisbase_columns\",\"ordinal_position\",\"tinyint\",\"4\",\"no\",null)","columns");
- 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (8,\"davisbase_columns\",\"is_nullable\",\"text\",\"5\",\"no\",null)","columns");
- 			insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (9,\"davisbase_columns\",\"column_key\",\"text\",\"6\",\"no\",null)","columns");
+			parseCreateString("create davisbase_tables (row_id int,table_name text not null)","first");
+			parseCreateString("create davisbase_columns (row_id int,table_name text not null,column_name text not null,data_type text not null,ordinal_position tinyint not null,is_nullable text not null)","first");
+ 			insertDavis("insert into davisbase_tables (row_id,table_name) values (1,\"davisbase_tables\")","tables");
+ 			insertDavis("insert into davisbase_tables (row_id,table_name) values (2,\"davisbase_columns\")","tables");
+ 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (1,\"davisbase_tables\",\"row_id\",\"int\",\"0\",\"no\",\"pri\")","columns");
+ 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (2,\"davisbase_tables\",\"table_name\",\"text\",\"1\",\"no\",null)","columns");
+ 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (3,\"davisbase_columns\",\"row_id\",\"int\",\"0\",\"no\",\"pri\")","columns");
+ 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (4,\"davisbase_columns\",\"table_name\",\"text\",\"1\",\"no\",null)","columns");
+ 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (5,\"davisbase_columns\",\"column_name\",\"text\",\"2\",\"no\",null)","columns");
+ 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (6,\"davisbase_columns\",\"data_type\",\"text\",\"3\",\"no\",null)","columns");
+ 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (7,\"davisbase_columns\",\"ordinal_position\",\"tinyint\",\"4\",\"no\",null)","columns");
+ 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (8,\"davisbase_columns\",\"is_nullable\",\"text\",\"5\",\"no\",null)","columns");
+ 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (9,\"davisbase_columns\",\"column_key\",\"text\",\"6\",\"no\",null)","columns");
  			System.out.println("Davis tables created.");
 		}		
 
@@ -172,20 +169,32 @@ public class DavisBasePromptExample {
 			case "select":
 				int rownum=0;
 				String [][] output= parseQueryString(userCommand);
-				for (int i=0; i<output.length ; i++)
+				if (output.length == 0)
 				{
-					for (int j=0; j<output[i].length ; j++)
-					{
-						System.out.print(output[i][j]+"\t");
-					}
-					rownum++;
-					System.out.println("");	
+					sqlcode=100;
+					System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
 				}
-				System.out.println("");
-				System.out.println((rownum-2)+" rows displayed");
+				else
+				{
+					for (int i=0; i<output.length ; i++)
+					{
+						for (int j=0; j<output[i].length ; j++)
+						{
+							System.out.print(output[i][j]+"\t");
+						}
+						rownum++;
+						System.out.println("");	
+					}
+					System.out.println("");
+					System.out.println((rownum-2)+" rows displayed");
+				}
 				break;
 			case "drop":
-				dropTable(userCommand);
+				sqlcode=dropTable(userCommand);
+				if (sqlcode == 0)
+					System.out.println("Table drop "+err.getValue(sqlcode));
+				else
+					System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
 				break;
 			case "create":
 				sqlcode=parseCreateString(userCommand,"user");
@@ -200,12 +209,14 @@ public class DavisBasePromptExample {
 					System.out.println("Row insertion "+err.getValue(sqlcode));
 				else
 					System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
+				break;
 			case "delete":
-				sqlcode=parseInsertString(userCommand);
+				sqlcode=parseDeleteString(userCommand);
 				if (sqlcode == 0)
 					System.out.println("Row deletion "+err.getValue(sqlcode));
 				else
 					System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
+				break;
 			case "help":
 				help();
 				break;
@@ -228,9 +239,50 @@ public class DavisBasePromptExample {
 	 *  Stub method for dropping tables
 	 *  @param dropTableString is a String of the user input
 	 */
-	public static void dropTable(String dropTableString) {
-		System.out.println("STUB: Calling parseQueryString(String s) to process queries");
-		System.out.println("Parsing the string:\"" + dropTableString + "\"");
+	public static int dropTable(String dropTableString) 
+	{
+		System.out.println("QUERY: "+dropTableString);
+		int i=1;
+		int sqlcode=0;
+		ArrayList<String> tokens = new ArrayList<String>(Arrays.asList(dropTableString.split(" ")));
+		if (!tokens.get(i++).equals("table"))
+		{
+			sqlcode=-101;
+			System.out.println("Expected table, got "+tokens.get(i-1));
+		}
+		String tableName=tokens.get(i);
+		String table_names[][]=queryDavis("select row_id from davisbase_tables where table_name=\""+tableName+"\"");
+		if (table_names.length==0)
+		{
+			sqlcode=-102;
+			return sqlcode;
+		}
+		sqlcode=parseDeleteString("delete from davisbase_tables where row_id="+Integer.valueOf(table_names[0][0]));
+		if (sqlcode!=0)
+			return sqlcode;
+		String column_names[][]=queryDavis("select row_id from davisbase_columns where table_name=\""+tableName+"\"");
+		if (column_names.length==0)
+		{
+			sqlcode=-102;
+			return sqlcode;
+		}
+		for(int j=0;j<column_names.length;j++)
+		{
+			sqlcode=parseDeleteString("delete from davisbase_columns where row_id="+Integer.valueOf(column_names[j][0]));
+			if (sqlcode!=0)
+				return sqlcode;
+		}
+		try
+		{
+			File f =new File(tableName+".tbl");
+			f.delete();
+		}
+		catch(Exception e) 
+		{
+			System.out.println(err.getValue(-1000));
+			e.printStackTrace();
+		}
+		return sqlcode;
 	}
 	
 	/**
@@ -316,7 +368,6 @@ public class DavisBasePromptExample {
 			 *  Note that this doesn't create the table file in the correct directory structure
 			 */
 			RandomAccessFile tableFile = new RandomAccessFile(tableFileName, "r");
-			DataTypes dt=new DataTypes();
 			tableFile.seek(1);
 			numRec=tableFile.readByte();
 
@@ -550,11 +601,13 @@ public class DavisBasePromptExample {
 			 *  Note that this doesn't create the table file in the correct directory structure
 			 */
 			RandomAccessFile tableFile = new RandomAccessFile(tableFileName, "r");
-			DataTypes dt=new DataTypes();
 			tableFile.seek(1);
 			numRec=tableFile.readByte();
 			//HARD CODED
-			numCol=7;
+			if (tableName.equals("davisbase_tables"))
+				numCol=2;
+			else if (tableName.equals("davisbase_columns")) 
+				numCol=7;
 			
 			String output[][]=new String[numRec][numCol];
  			String filter_output[][]=null;
@@ -700,7 +753,7 @@ public class DavisBasePromptExample {
 				
 				if (!str.equals("first"))
 				{
-					insertDavis("insert into davisbase_tables (rowid,table_name) values (0,\""+tableName+"\")","meta");
+					insertDavis("insert into davisbase_tables (row_id,table_name) values (0,\""+tableName+"\")","meta");
 					
 					//Extract column list
 					String c_list=createTableString.substring(createTableString.indexOf("(")+1,createTableString.indexOf(")"));
@@ -738,7 +791,7 @@ public class DavisBasePromptExample {
 								}
 							}
 						}
-						insertDavis("insert into davisbase_columns (rowid,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) "
+						insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) "
 								+ "values (0,\""+tableName+"\",\""+c.get(0)+"\",\""+c.get(1)+"\",\""+j+"\",\""+nullable+"\",\""+prim+"\")","meta");
 					}
 					return sqlcode;
@@ -757,45 +810,131 @@ public class DavisBasePromptExample {
 	
 	public static int parseDeleteString(String deleteString) 
 	{
+		System.out.println("QUERY: "+deleteString);;
 		RandomAccessFile tableFile=null;
 		int sqlcode=0;
 		int i=1;
-		ArrayList<String> createTokens = new ArrayList<String>(Arrays.asList(deleteString.split(" ")));
-		ArrayList<String> column_value_list = new ArrayList<String>();
-		try 
+		int key=0;
+		ArrayList<String> tokens = new ArrayList<String>(Arrays.asList(deleteString.split(" ")));
+		if (!tokens.get(i++).equals("from"))
 		{
-			//Validate syntax
-			if (! createTokens.get(i++).equals("into"))
-			{
-				System.out.println("Expected into, got "+createTokens.get(i-1));
-				return -101;
-			}
-			String tableName=createTokens.get(i++);
-			String tableFileName = tableName+ ".tbl";
-			File f = new File(tableFileName);
-			if (!f.exists())
-				return -102;
-			
-			String columns=createTokens.get(i++);
-			
+			sqlcode= -101;
+			return sqlcode;
 		}
+		String tableName=tokens.get(i++);
+		String tableFileName =  tableName+ ".tbl";
+		File f = new File(tableFileName);
+		if (!f.exists())
+		{
+			sqlcode=-102;
+			return sqlcode;
+		}
+		//If where clause present
+		boolean hasWhere=false;
+		if (i<tokens.size())
+		{
+			hasWhere=true;
+			if (!tokens.get(i++).equals("where"))
+			{
+				sqlcode=-101;
+				return sqlcode;
+			}
+
+			String clause= deleteString.substring(deleteString.indexOf("where")+5).trim();
+			ArrayList<String> clause_list= new ArrayList<String>(Arrays.asList(clause.split("=")));
+			String [][] table_name=queryDavis("select column_name,column_key from davisbase_columns where table_name=\""+tableName+"\"");
+			boolean primary_key=false;
+			for (int j=0; j<table_name.length; j++)
+			{
+				if (table_name[j][1].equals("pri"))
+				{
+					if (table_name[j][0].equals(clause_list.get(0)))
+					{
+						primary_key=true;
+					}
+				}
+			}
+			//Primary key not selected
+			if (!primary_key)
+			{
+				sqlcode=-111;
+				return sqlcode;
+			}
+
+			try
+			{
+				key=Integer.valueOf(clause_list.get(1));
+			}
+            catch(NumberFormatException e)
+            {
+            	sqlcode=-112;
+				return sqlcode;
+            }
+		}
+		try
+		{
+			tableFile = new RandomAccessFile(tableFileName, "rw");
+			tableFile.seek(1);
+			int numRec=tableFile.readByte();
+			boolean found=false;
+			for(int j=0;j<numRec;j++)
+			{
+				int key_location=j*2+8;
+				if (found)
+				{
+					tableFile.seek(key_location);
+					int next_key=tableFile.readShort();
+					tableFile.seek(key_location);
+					tableFile.writeShort(0);
+					tableFile.seek(key_location-2);
+					tableFile.writeShort(next_key);
+				}
+				else
+				{
+					tableFile.seek(key_location);
+					int data_addr=tableFile.readShort();
+					tableFile.seek(data_addr+6);
+					int num_col=tableFile.readByte();
+					tableFile.seek(data_addr+6+num_col+1);
+					int rec_key=tableFile.readInt();
+					if (!found && key==rec_key)
+					{
+						found=true;
+						tableFile.seek(key_location);
+						tableFile.writeShort(0);
+					}	
+				}
+			}
+			if (found)
+			{
+			//Update record number
+				tableFile.seek(1);
+				tableFile.writeByte(numRec-1);
+				tableFile.close();
+			}
+			else
+			{
+				sqlcode=100;
+				return sqlcode;
+			}
+		}
+		catch(Exception e) 
+		{
+			System.out.println(err.getValue(-1000));
+			e.printStackTrace();
+		}
+		finally 
+		{
+			try
+			{
+				tableFile.close();
+			}
 			catch(Exception e) 
 			{
 				System.out.println(err.getValue(-1000));
 				e.printStackTrace();
 			}
-			finally 
-			{
-				try
-				{
-					tableFile.close();
-				}
-				catch(Exception e) 
-				{
-					System.out.println(err.getValue(-1000));
-					e.printStackTrace();
-				}
-		    }
+	    }
 
 	return sqlcode;
 	}
@@ -821,6 +960,7 @@ public class DavisBasePromptExample {
 			if (!f.exists())
 				return -102;
 			
+			//CHECK
 			String columns=createTokens.get(i++);
 			//Extract column list
 			String c_list=insertString.substring(insertString.indexOf("(")+1,insertString.indexOf(")"));
@@ -994,6 +1134,21 @@ public class DavisBasePromptExample {
 			totrecordSize=2+4+1+column_value_list.size()+recordSize;
 			tableFile.seek(1);
 			int numRec=tableFile.readByte();
+			//calc rowid
+			int rowid=0;
+			if (numRec == 0)
+				rowid=1;
+			else
+			{
+				//Read address of the used record memory location
+				tableFile.seek(2);
+				int last_rec_loc=tableFile.readShort();
+				
+				//Read rowid of last used record memory location
+				tableFile.seek(last_rec_loc+2);
+				int last_rowid=tableFile.readInt();
+				rowid=last_rowid+1;
+			}
 			tableFile.seek(1);
 			tableFile.write(numRec+1);
 			tableFile.seek(2);
@@ -1009,7 +1164,7 @@ public class DavisBasePromptExample {
 			int payload=1+column_value_list.size()+recordSize;
 			tableFile.writeShort(payload);
 				//RowID
-			tableFile.writeInt(numRec+1);
+			tableFile.writeInt(rowid);
 				//Number of columns
 			tableFile.writeByte(column_value_list.size());
 				//Code of each column
@@ -1092,6 +1247,8 @@ public class DavisBasePromptExample {
 				sqlcode=-102;
 				return sqlcode;
 			}
+			
+			//CHECK
 			String columns=createTokens.get(i++);
 			//Extract column list
 			String c_list=insertString.substring(insertString.indexOf("(")+1,insertString.indexOf(")"));
@@ -1240,8 +1397,7 @@ public class DavisBasePromptExample {
 			else
 			{
 				//Read address of the used record memory location
-				int last_key_pos=numRec*2+6;
-				tableFile.seek(last_key_pos);
+				tableFile.seek(2);
 				int last_rec_loc=tableFile.readShort();
 				
 				//Read rowid of last used record memory location
@@ -1325,7 +1481,7 @@ public class DavisBasePromptExample {
 	    }
 	return sqlcode;
 	}
-	
+
 	static String findDataType(String str)
 	{
 		//HARD CODED
@@ -1339,7 +1495,7 @@ public class DavisBasePromptExample {
 			return "text";
 		case "ordinal_position":
 			return "tinyint";
-		case "rowid":
+		case "row_id":
 			return "int";
 
 		default:
@@ -1351,7 +1507,7 @@ public class DavisBasePromptExample {
 		//HARD CODED
 		switch(str)
 		{
-		case "rowid":
+		case "row_id":
 			return 0;
 		case "table_name":
 			return 1;
@@ -1378,7 +1534,7 @@ public class DavisBasePromptExample {
 			
 			table_data[0][0]="1";
 			table_data[0][1]="davisbase_tables";
-			table_data[0][2]="rowid";
+			table_data[0][2]="row_id";
 			table_data[0][3]="int";
 			table_data[0][4]="0";
 			table_data[0][5]="no";
@@ -1397,7 +1553,7 @@ public class DavisBasePromptExample {
 			table_data=new String[7][7];
 			table_data[0][0]="3";
 			table_data[0][1]="davisbase_columns";
-			table_data[0][2]="rowid";
+			table_data[0][2]="row_id";
 			table_data[0][3]="int";
 			table_data[0][4]="0";
 			table_data[0][5]="no";

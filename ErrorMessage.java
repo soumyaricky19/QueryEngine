@@ -20,6 +20,7 @@ public class ErrorMessage
 		hm.put(-109, "Primary key must be integer type");
 		hm.put(-110, "Unrecognized constraint");
 		hm.put(-111, "Primary key column not given in where");
+		hm.put(-112, "Non integer value not supported");
 		hm.put(-1000, "Error -1000: Unexpected error");
 		
 	}
