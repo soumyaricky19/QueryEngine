@@ -851,6 +851,8 @@ public class DavisBasePromptExample {
 		int sqlcode=0;
 		int i=1;
 		int key=0;
+		String primary_key_column=null;
+		String clause=null;
 		ArrayList<String> tokens = new ArrayList<String>(Arrays.asList(deleteString.split(" ")));
 		if (!tokens.get(i++).equals("from"))
 		{
@@ -877,7 +879,7 @@ public class DavisBasePromptExample {
 				return sqlcode;
 			}
 
-			String clause= deleteString.substring(deleteString.indexOf("where")+5).trim();
+			clause= deleteString.substring(deleteString.indexOf("where")+5).trim();
 			ArrayList<String> clause_list= new ArrayList<String>(Arrays.asList(clause.split("=")));
 			String [][] table_name=queryDavis("select column_name,column_key from davisbase_columns where table_name=\""+tableName+"\"");
 			boolean primary_key=false;
@@ -885,6 +887,7 @@ public class DavisBasePromptExample {
 			{
 				if (table_name[j][1].equals("pri"))
 				{
+					primary_key_column=table_name[j][0];
 					if (table_name[j][0].equals(clause_list.get(0)))
 					{
 						primary_key=true;
@@ -892,68 +895,70 @@ public class DavisBasePromptExample {
 				}
 			}
 			//Primary key not selected
-			if (!primary_key)
+			if (primary_key)
 			{
-				sqlcode=-111;
-				return sqlcode;
+				try
+				{
+					key=Integer.valueOf(clause_list.get(1));
+				}
+	            catch(NumberFormatException e)
+	            {
+	            	sqlcode=-112;
+					return sqlcode;
+	            }
 			}
-
-			try
-			{
-				key=Integer.valueOf(clause_list.get(1));
-			}
-            catch(NumberFormatException e)
-            {
-            	sqlcode=-112;
-				return sqlcode;
-            }
 		}
+		
 		try
 		{
 			tableFile = new RandomAccessFile(tableFileName, "rw");
-			tableFile.seek(1);
-			int numRec=tableFile.readByte();
-			boolean found=false;
-			for(int j=0;j<numRec;j++)
+			String [][] table_name=parseQueryString("select "+primary_key_column+" from "+tableName+" where "+clause);
+			for (int r=2; r<table_name.length; r++)
 			{
-				int key_location=j*2+8;
-				if (found)
+				int delete_key=Integer.valueOf(table_name[r][0]);
+				tableFile.seek(1);
+				int numRec=tableFile.readByte();
+				boolean found=false;
+				for(int j=0;j<numRec;j++)
 				{
-					tableFile.seek(key_location);
-					int next_key=tableFile.readShort();
-					tableFile.seek(key_location);
-					tableFile.writeShort(0);
-					tableFile.seek(key_location-2);
-					tableFile.writeShort(next_key);
-				}
-				else
-				{
-					tableFile.seek(key_location);
-					int data_addr=tableFile.readShort();
-					tableFile.seek(data_addr+6);
-					int num_col=tableFile.readByte();
-					tableFile.seek(data_addr+6+num_col+1);
-					int rec_key=tableFile.readInt();
-					if (!found && key==rec_key)
+					int key_location=j*2+8;
+					if (found)
 					{
-						found=true;
+						tableFile.seek(key_location);
+						int next_key=tableFile.readShort();
 						tableFile.seek(key_location);
 						tableFile.writeShort(0);
-					}	
+						tableFile.seek(key_location-2);
+						tableFile.writeShort(next_key);
+					}
+					else
+					{
+						tableFile.seek(key_location);
+						int data_addr=tableFile.readShort();
+						tableFile.seek(data_addr+6);
+						int num_col=tableFile.readByte();
+						tableFile.seek(data_addr+6+num_col+1);
+						int rec_key=tableFile.readInt();
+						if (!found && delete_key==rec_key)
+						{
+							found=true;
+							tableFile.seek(key_location);
+							tableFile.writeShort(0);
+						}	
+					}
+				}
+				if (found)
+				{
+				//Update record number
+					tableFile.seek(1);
+					tableFile.writeByte(numRec-1);
 				}
 			}
-			if (found)
-			{
-			//Update record number
-				tableFile.seek(1);
-				tableFile.writeByte(numRec-1);
-				tableFile.close();
-			}
+			tableFile.close();
+			if (table_name.length > 2)
+				System.out.println((table_name.length-2)+" rows affected.");
 			else
-			{
 				sqlcode=100;
-				return sqlcode;
-			}
 		}
 		catch(Exception e) 
 		{
