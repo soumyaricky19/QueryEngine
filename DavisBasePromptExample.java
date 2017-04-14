@@ -185,7 +185,6 @@ public class DavisBasePromptExample {
 				System.out.println((rownum-2)+" rows displayed");
 				break;
 			case "drop":
-				System.out.println("STUB: Calling your method to drop items");
 				dropTable(userCommand);
 				break;
 			case "create":
@@ -197,8 +196,16 @@ public class DavisBasePromptExample {
 				break;
 			case "insert":
 				sqlcode=parseInsertString(userCommand);
-				System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
-				break;
+				if (sqlcode == 0)
+					System.out.println("Row insertion "+err.getValue(sqlcode));
+				else
+					System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
+			case "delete":
+				sqlcode=parseInsertString(userCommand);
+				if (sqlcode == 0)
+					System.out.println("Row deletion "+err.getValue(sqlcode));
+				else
+					System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
 			case "help":
 				help();
 				break;
@@ -330,47 +337,13 @@ public class DavisBasePromptExample {
  			int temp_col=0;
 			for (int j=0;j<numRec;j++)
 			{
+				//Read key
 				tableFile.seek(j*2+8);
 				int data_addr=tableFile.readShort();
-				tableFile.seek(data_addr+6);
-				int num_col=tableFile.readByte();
-				int cumul_size=0;
-				
-				for (int k=0; k<numCol ;k++)
-				{
-					tableFile.seek(data_addr+7+k);
-					int code=tableFile.readByte();
-//					System.out.println(code);
-					int size=dt.getSize(String.valueOf(code));
-					tableFile.seek(data_addr+7+num_col+cumul_size);
-					String s=null;
-					switch (size)
-					{
-						case 99:
-							size=code-12;
-//							System.out.println(tableFile.getFilePointer());
-							byte b[]=new byte[size];
-							tableFile.readFully(b);
-//							s=String.valueOf(b);
-							s=new String(b);
-							break;
-						case 1:
-							s=String.valueOf(tableFile.readByte());
-							break;
-						case 2:
-							s=String.valueOf(tableFile.readShort());
-							break;
-						case 4:
-							s=String.valueOf(tableFile.readInt());
-							break;
-						case 8:
-							s=String.valueOf(tableFile.readDouble());
-							break;
-					} 
-					cumul_size+=size;
-//					System.out.print(s);
-					output[j][k]=s;
-				}
+				//Read record
+				String rec[]=getRecord(tableFile,data_addr);
+				for (int k=0; k<numCol;k++)
+					output[j][k]=rec[k];
 			}
 			tableFile.close();
 
@@ -385,7 +358,6 @@ public class DavisBasePromptExample {
 					column_list.add(ordinal_position[m][0]);
 					allowed_pos.add(Integer.valueOf(ordinal_position[m][1]));
   				}
-
 			}
 			else
 			{
@@ -591,47 +563,13 @@ public class DavisBasePromptExample {
  			int temp_col=0;
 			for (int j=0;j<numRec;j++)
 			{
+				//Read key
 				tableFile.seek(j*2+8);
 				int data_addr=tableFile.readShort();
-				tableFile.seek(data_addr+6);
-				int num_col=tableFile.readByte();
-				int cumul_size=0;
-				
-				for (int k=0; k<numCol ;k++)
-				{
-					tableFile.seek(data_addr+7+k);
-					int code=tableFile.readByte();
-//					System.out.println(code);
-					int size=dt.getSize(String.valueOf(code));
-					tableFile.seek(data_addr+7+num_col+cumul_size);
-					String s=null;
-					switch (size)
-					{
-						case 99:
-							size=code-12;
-//							System.out.println(tableFile.getFilePointer());
-							byte b[]=new byte[size];
-							tableFile.readFully(b);
-//							s=String.valueOf(b);
-							s=new String(b);
-							break;
-						case 1:
-							s=String.valueOf(tableFile.readByte());
-							break;
-						case 2:
-							s=String.valueOf(tableFile.readShort());
-							break;
-						case 4:
-							s=String.valueOf(tableFile.readInt());
-							break;
-						case 8:
-							s=String.valueOf(tableFile.readDouble());
-							break;
-					} 
-					cumul_size+=size;
-//					System.out.print(s);
-					output[j][k]=s;
-				}
+				//Read record
+				String rec[]=getRecord(tableFile,data_addr);
+				for (int k=0; k<numCol;k++)
+					output[j][k]=rec[k];
 			}
 			tableFile.close();
 
@@ -816,6 +754,51 @@ public class DavisBasePromptExample {
 		return sqlcode;
 	}
 	
+	
+	public static int parseDeleteString(String deleteString) 
+	{
+		RandomAccessFile tableFile=null;
+		int sqlcode=0;
+		int i=1;
+		ArrayList<String> createTokens = new ArrayList<String>(Arrays.asList(deleteString.split(" ")));
+		ArrayList<String> column_value_list = new ArrayList<String>();
+		try 
+		{
+			//Validate syntax
+			if (! createTokens.get(i++).equals("into"))
+			{
+				System.out.println("Expected into, got "+createTokens.get(i-1));
+				return -101;
+			}
+			String tableName=createTokens.get(i++);
+			String tableFileName = tableName+ ".tbl";
+			File f = new File(tableFileName);
+			if (!f.exists())
+				return -102;
+			
+			String columns=createTokens.get(i++);
+			
+		}
+			catch(Exception e) 
+			{
+				System.out.println(err.getValue(-1000));
+				e.printStackTrace();
+			}
+			finally 
+			{
+				try
+				{
+					tableFile.close();
+				}
+				catch(Exception e) 
+				{
+					System.out.println(err.getValue(-1000));
+					e.printStackTrace();
+				}
+		    }
+
+	return sqlcode;
+	}
 	
 	public static int parseInsertString(String insertString) 
 	{
@@ -1469,5 +1452,54 @@ public class DavisBasePromptExample {
 			table_data[6][6]=null;
 		}
 		return table_data;
+	}
+	static String [] getRecord(RandomAccessFile tableFile,int data_addr)
+	{
+		int cumul_size=0;
+		String str[]=null;
+		try
+		{
+			tableFile.seek(data_addr+6);
+			int num_col=tableFile.readByte();
+			str=new String[num_col];
+			for (int k=0; k<num_col ;k++)
+			{
+				tableFile.seek(data_addr+7+k);
+				int code=tableFile.readByte();
+				DataTypes dt= new DataTypes();
+				int size=dt.getSize(String.valueOf(code));
+				tableFile.seek(data_addr+7+num_col+cumul_size);
+				String s=null;
+				switch (size)
+				{
+					case 99:
+						size=code-12;
+						byte b[]=new byte[size];
+						tableFile.readFully(b);
+						s=new String(b);
+						break;
+					case 1:
+						s=String.valueOf(tableFile.readByte());
+						break;
+					case 2:
+						s=String.valueOf(tableFile.readShort());
+						break;
+					case 4:
+						s=String.valueOf(tableFile.readInt());
+						break;
+					case 8:
+						s=String.valueOf(tableFile.readDouble());
+						break;
+				} 
+				cumul_size+=size;
+				str[k]=s;
+			}
+		}
+		catch(Exception e) 
+		{
+			System.out.println(err.getValue(-1000));
+			e.printStackTrace();
+		}
+		return str;
 	}
 }
