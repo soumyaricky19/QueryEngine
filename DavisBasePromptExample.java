@@ -376,7 +376,7 @@ public class DavisBasePromptExample {
 						}
 			    		break;
 			    	case ' ':
-			    		if (st.peek() == '"')
+			    		if (!st.isEmpty() && st.peek() == '"')
 			    			word.append(ch);
 			    		break;
 			    	default:
@@ -618,7 +618,7 @@ public class DavisBasePromptExample {
 						}
 			    		break;
 			    	case ' ':
-			    		if (st.peek() == '"')
+			    		if (!st.isEmpty() && st.peek() == '"')
 			    			word.append(ch);
 			    		break;
 			    	default:
@@ -1072,7 +1072,7 @@ public class DavisBasePromptExample {
 			    			st.pop();
 			    		break;
 			    	case ' ':
-			    		if (st.peek() == '"')
+			    		if (!st.isEmpty() && st.peek() == '"')
 			    			word.append(ch);
 			    		break;
 			    	default:
@@ -1414,7 +1414,7 @@ public class DavisBasePromptExample {
 			    			st.pop();
 			    		break;
 			    	case ' ':
-			    		if (st.peek() == '"')
+			    		if (!st.isEmpty() && st.peek() == '"')
 			    			word.append(ch);
 			    		break;
 			    	default:
@@ -1653,7 +1653,7 @@ public class DavisBasePromptExample {
 					}
 		    		break;
 		    	case ' ':
-		    		if (st.peek() == '"')
+		    		if (!st.isEmpty() && st.peek() == '"')
 		    			word.append(ch);
 		    		break;
 		    	default:
@@ -1804,10 +1804,6 @@ public class DavisBasePromptExample {
 				{
 					//Record header
 					//CHECK different string length
-					//Change code
-					tableFile.seek(currentLocation+7+given_pos);
-					tableFile.writeByte(code);
-					//Change value
 					int code_loc=currentLocation+7;
 					int rec_len=0;
 					int prev_len=0;
@@ -1825,13 +1821,28 @@ public class DavisBasePromptExample {
 						}
 						rec_len+=size;					
 					}
-					tableFile.seek(currentLocation+6+num_of_Col+prev_len+1);
-					tableFile.writeBytes(value);
-					//Remaining bytes if string is smaller
-					if (c>=12)
-					for (int j=0;j<size-value.length();j++)
+					int diff=size-value.length();
+					if (diff>=0)
 					{
-						tableFile.writeByte(0);
+						//Change code
+//						tableFile.seek(currentLocation+7+given_pos);
+//						tableFile.writeByte(code);
+						//Change value
+						tableFile.seek(currentLocation+6+num_of_Col+prev_len+1);
+						tableFile.writeBytes(value);
+						//Remaining bytes if string is smaller
+						if (c>=12)
+						{
+							for (int j=0;j<diff;j++)
+							{
+								tableFile.writeByte(0);
+							}
+						}
+					}
+					else
+					{
+						tableFile.seek(2);
+						int last_rec_loc=tableFile.readShort();
 					}
 				}
 			}
