@@ -169,12 +169,7 @@ public class DavisBasePromptExample {
 			case "select":
 				int rownum=0;
 				String [][] output= parseQueryString(userCommand);
-				if (output.length == 0)
-				{
-					sqlcode=100;
-					System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
-				}
-				else
+				try
 				{
 					for (int i=0; i<output.length ; i++)
 					{
@@ -187,6 +182,10 @@ public class DavisBasePromptExample {
 					}
 					System.out.println("");
 					System.out.println((rownum-2)+" rows displayed");
+				}
+				catch (Exception NullPointerException)
+				{
+					//Error message already displayed
 				}
 				break;
 			case "drop":
@@ -303,6 +302,8 @@ public class DavisBasePromptExample {
 		int sqlcode=0;
 		int numCol=0;
 		int numRec=0;
+		int key=0;
+		boolean primary_key=false;
 		String search_keyword = null;
 		int pos=99;
 		ArrayList<String> tokens = new ArrayList<String>(Arrays.asList(queryString.split(" ")));
@@ -337,22 +338,37 @@ public class DavisBasePromptExample {
 //			String clause=tokens.get(i++);
 			String clause= queryString.substring(queryString.indexOf("where")+5).trim();
 			ArrayList<String> clause_list= new ArrayList<String>(Arrays.asList(clause.split("=")));
- 			//pos=findPosition(clause_list.get(0));
- 			String ordinal_position[][]=queryDavis("select table_name,ordinal_position from davisbase_columns where column_name=\""+clause_list.get(0)+"\"");
-				for (int m=0; m<ordinal_position.length; m++)
+ 			String ordinal_position[][]=queryDavis("select table_name,ordinal_position,column_key from davisbase_columns where column_name=\""+clause_list.get(0)+"\"");
+			for (int m=0; m<ordinal_position.length; m++)
+			{
+				if (ordinal_position[m][0].equals(tableName))
 				{
-					if (ordinal_position[m][0].equals(tableName))
-					{
-						pos=Integer.parseInt(ordinal_position[m][1]);
-						break;
-					}
+					if (ordinal_position[m][2].equals("pri"))
+						primary_key=true;
+					pos=Integer.parseInt(ordinal_position[m][1]);
+					break;
 				}
-				if (pos == 99)
+			}
+			//Primary key selected
+			if (primary_key)
+			{
+				try
 				{
-					sqlcode=-105;
-					System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
+					key=Integer.valueOf(clause_list.get(1));
+				}
+	            catch(NumberFormatException e)
+	            {
+	            	sqlcode=-112;
+	            	System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
 					return null;
-				}
+	            }
+			}
+			if (pos == 99)
+			{
+				sqlcode=-105;
+				System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
+				return null;
+			}
  			int l=0;
 			Stack<Character> st = new Stack<Character>();
 			StringBuffer word= new StringBuffer();
@@ -422,10 +438,29 @@ public class DavisBasePromptExample {
 				//Read key
 				tableFile.seek(j*2+8);
 				int data_addr=tableFile.readShort();
+				tableFile.seek(data_addr+6);
+				int num_col=tableFile.readByte();
+				tableFile.seek(data_addr+6+num_col+1);
+				int rec_key=tableFile.readInt();
 				//Read record
-				String rec[]=getRecord(tableFile,data_addr);
-				for (int k=0; k<numCol;k++)
-					output[j][k]=rec[k];
+				if (primary_key)
+				{
+					if (key==rec_key)
+					{
+						String rec[]=getRecord(tableFile,data_addr);
+						for (int k=0; k<numCol;k++)
+							output[0][k]=rec[k];
+						numRec=1;
+						break;
+					}
+				}
+				else
+				{
+					String rec[]=getRecord(tableFile,data_addr);
+					for (int k=0; k<numCol;k++)
+						output[j][k]=rec[k];
+				}
+				
 			}
 			tableFile.close();
 
