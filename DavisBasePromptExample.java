@@ -1822,28 +1822,41 @@ public class DavisBasePromptExample {
 						rec_len+=size;					
 					}
 					int diff=size-value.length();
-					if (diff>=0)
+					//Change value
+					tableFile.seek(currentLocation);
+					int payload=tableFile.readShort();
+					tableFile.seek(2);
+					int last_rec_loc=tableFile.readShort();
+					int from_rec_loc=currentLocation+6+num_of_Col+prev_len+1;
+					tableFile.seek(last_rec_loc);
+					byte b[]=new byte[from_rec_loc-last_rec_loc];
+					tableFile.readFully(b);
+					String s=new String(b);
+					tableFile.seek(last_rec_loc+diff);
+					tableFile.writeBytes(s);
+					tableFile.seek(from_rec_loc+diff);
+					tableFile.writeBytes(value);
+					//Change code
+					tableFile.seek(currentLocation+diff+7+given_pos);
+					tableFile.writeByte(code);
+					//Change payload
+					tableFile.seek(currentLocation+diff);
+					tableFile.writeShort(payload-diff);
+					//Change keys
+					for(int j=0;j<numRec;j++)
 					{
-						//Change code
-//						tableFile.seek(currentLocation+7+given_pos);
-//						tableFile.writeByte(code);
-						//Change value
-						tableFile.seek(currentLocation+6+num_of_Col+prev_len+1);
-						tableFile.writeBytes(value);
-						//Remaining bytes if string is smaller
-						if (c>=12)
+						int key_location=j*2+8;
+						tableFile.seek(key_location);
+						int data_addr=tableFile.readShort();
+						if 	(data_addr<from_rec_loc)
 						{
-							for (int j=0;j<diff;j++)
-							{
-								tableFile.writeByte(0);
-							}
+							tableFile.seek(key_location);
+							tableFile.writeShort(data_addr+diff);
 						}
 					}
-					else
-					{
-						tableFile.seek(2);
-						int last_rec_loc=tableFile.readShort();
-					}
+					//Change last rec loc
+					tableFile.seek(2);
+					tableFile.writeShort(last_rec_loc+diff);
 				}
 			}
 			tableFile.close();
