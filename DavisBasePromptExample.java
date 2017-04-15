@@ -56,8 +56,8 @@ public class DavisBasePromptExample {
 		File f2 = new File("davisbase_columns.tbl");
 		if (!f1.exists() || !f2.exists())
 		{
-			parseCreateString("create davisbase_tables (row_id int,table_name text not null)","first");
-			parseCreateString("create davisbase_columns (row_id int,table_name text not null,column_name text not null,data_type text not null,ordinal_position tinyint not null,is_nullable text not null)","first");
+			parseCreateString("create table davisbase_tables (row_id int,table_name text not null)","first");
+			parseCreateString("create table davisbase_columns (row_id int,table_name text not null,column_name text not null,data_type text not null,ordinal_position tinyint not null,is_nullable text not null)","first");
  			insertDavis("insert into davisbase_tables (row_id,table_name) values (1,\"davisbase_tables\")","tables");
  			insertDavis("insert into davisbase_tables (row_id,table_name) values (2,\"davisbase_columns\")","tables");
  			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (1,\"davisbase_tables\",\"row_id\",\"int\",\"0\",\"no\",\"pri\")","columns");
@@ -376,6 +376,8 @@ public class DavisBasePromptExample {
 						}
 			    		break;
 			    	case ' ':
+			    		if (st.peek() == '"')
+			    			word.append(ch);
 			    		break;
 			    	default:
 			    		word.append(ch);
@@ -616,6 +618,8 @@ public class DavisBasePromptExample {
 						}
 			    		break;
 			    	case ' ':
+			    		if (st.peek() == '"')
+			    			word.append(ch);
 			    		break;
 			    	default:
 			    		word.append(ch);
@@ -756,6 +760,12 @@ public class DavisBasePromptExample {
 //		System.out.println("Parsing the string:\"" + createTableString + "\"");
 		ArrayList<String> createTokens = new ArrayList<String>(Arrays.asList(createTableString.split(" ")));
 		
+		if (!createTokens.get(i++).equals("table"))
+		{
+			System.out.println("Expected table, got "+createTokens.get(i-1));
+			sqlcode=-101;
+			return sqlcode;
+		}
 		/* Define table file name */
 		String tableName=createTokens.get(i++);
 		String tableFileName = tableName+ ".tbl";
@@ -1062,6 +1072,8 @@ public class DavisBasePromptExample {
 			    			st.pop();
 			    		break;
 			    	case ' ':
+			    		if (st.peek() == '"')
+			    			word.append(ch);
 			    		break;
 			    	default:
 			    		word.append(ch);
@@ -1084,6 +1096,7 @@ public class DavisBasePromptExample {
 			int numCol=0;
 			int recordSize=0;
 			int totrecordSize=0;
+			int key=0;
 			String table_data[][]=queryDavis("select column_name,data_type,ordinal_position,is_nullable,column_key from davisbase_columns where table_name=\""+tableName+"\"");
 			numCol=table_data.length;
  			ArrayList<Integer> given_pos=new ArrayList<Integer>();
@@ -1096,6 +1109,19 @@ public class DavisBasePromptExample {
 				{
 					if (column_list.get(m).equals(table_data[n][0]))
 					{
+						if (n==0)
+						{
+							//Extract primary key
+							try
+							{
+								key=Integer.valueOf(column_value_list.get(m));
+							}
+				            catch(NumberFormatException e)
+				            {
+				            	sqlcode=-112;
+								return sqlcode;
+				            }
+						}
 						given_pos.add(n);
 						int code=dt.getCode(table_data[n][1]);
 						size=dt.getSize(String.valueOf(code));	
@@ -1146,7 +1172,7 @@ public class DavisBasePromptExample {
 				else
 				
 				//Null code
-				if (c_value[j].equals(null))
+				if (c_value[j]==null)
 				{
 					if (table_data[j][1].equals("no"))
 					{
@@ -1177,7 +1203,6 @@ public class DavisBasePromptExample {
 			}
 			
 			//Page header
-			//CHECK POSITION AND DUPLICATE
 			totrecordSize=2+4+1+column_value_list.size()+recordSize;
 			tableFile.seek(1);
 			int numRec=tableFile.readByte();
@@ -1196,13 +1221,52 @@ public class DavisBasePromptExample {
 				int last_rowid=tableFile.readInt();
 				rowid=last_rowid+1;
 			}
+			
+			//CHECK POSITION AND DUPLICATE	
+			//Find location
+			int m=0;
+			for(m=0;m<numRec;m++)
+			{
+				int key_location=m*2+8;
+				tableFile.seek(key_location);
+				int data_addr=tableFile.readShort();
+				tableFile.seek(data_addr+6);
+				int num_col=tableFile.readByte();
+				tableFile.seek(data_addr+6+num_col+1);
+				int rec_key=tableFile.readInt();
+				if (key==rec_key)
+				{
+					//Duplicate
+					sqlcode=-113;
+					return sqlcode;
+				}
+				else if (key<rec_key)
+				{
+					break;
+				}
+			}
+
+			//Insert and shift right
+			for(int n=numRec-1;n>=m;n--)
+			{
+				int key_location=n*2+8;
+				tableFile.seek(key_location);
+				int prev_key=tableFile.readShort();
+				tableFile.seek(key_location+2);
+				tableFile.writeShort(prev_key);
+			}
+			
+			//Update number of records
 			tableFile.seek(1);
 			tableFile.write(numRec+1);
+			//Update last updated key
 			tableFile.seek(2);
 			int currentLocation=tableFile.readShort();
 			tableFile.seek(2);
-			tableFile.writeShort(currentLocation-totrecordSize);	
-			tableFile.seek(numRec*2+8);
+			tableFile.writeShort(currentLocation-totrecordSize);
+			//Update last updated key at its position
+			int key_location=m*2+8;
+			tableFile.seek(key_location);
 			tableFile.writeShort(currentLocation-totrecordSize);
 			
 			//Record header
@@ -1239,7 +1303,7 @@ public class DavisBasePromptExample {
 							tableFile.writeShort(Integer.parseInt(c_value[j]));
 						break;
 					case 4:
-						if (!c_value[j].isEmpty())
+						if (c_value[j]!=null)
 							tableFile.writeInt(Integer.parseInt(c_value[j]));
 						break;
 					case 8:
@@ -1350,6 +1414,8 @@ public class DavisBasePromptExample {
 			    			st.pop();
 			    		break;
 			    	case ' ':
+			    		if (st.peek() == '"')
+			    			word.append(ch);
 			    		break;
 			    	default:
 			    		word.append(ch);
@@ -1563,15 +1629,10 @@ public class DavisBasePromptExample {
 			return sqlcode;
 		}
 		
-		String column=tokens.get(i++);
-		
-		if (!tokens.get(i++).equals("="))
-		{
-			sqlcode=-101;
-			return sqlcode;
-		}
-		
-		String value_any=tokens.get(i++);
+		String set_clause= queryString.substring(queryString.indexOf("set")+3).trim();
+		ArrayList<String> set_list= new ArrayList<String>(Arrays.asList(set_clause.split("=")));
+		String column=set_list.get(0).trim();
+		String value_any=set_list.get(1).trim();
 		int l=0;
 		Stack<Character> st = new Stack<Character>();
 		StringBuffer word= new StringBuffer();
@@ -1592,6 +1653,8 @@ public class DavisBasePromptExample {
 					}
 		    		break;
 		    	case ' ':
+		    		if (st.peek() == '"')
+		    			word.append(ch);
 		    		break;
 		    	default:
 		    		word.append(ch);
@@ -1606,15 +1669,9 @@ public class DavisBasePromptExample {
 		
 		//If where clause present
 		boolean hasWhere=false;
-		if (i<tokens.size())
+		if (tokens.contains("where"))
 		{
 			hasWhere=true;
-			if (!tokens.get(i++).equals("where"))
-			{
-				sqlcode=-101;
-				return sqlcode;
-			}
-
 			clause= queryString.substring(queryString.indexOf("where")+5).trim();
 			ArrayList<String> clause_list= new ArrayList<String>(Arrays.asList(clause.split("=")));
 			String [][] table_name=queryDavis("select column_name,column_key from davisbase_columns where table_name=\""+tableName+"\"");
@@ -1779,7 +1836,7 @@ public class DavisBasePromptExample {
 				}
 			}
 			tableFile.close();
-			if (table_name.length > 2)
+			if (table_name.length >= 2)
 			System.out.println((table_name.length-2)+" rows affected.");
 		}
 		catch(Exception e) 
