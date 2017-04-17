@@ -2,6 +2,7 @@ package db;
 
 import java.io.RandomAccessFile;
 import java.io.File;
+import java.io.IOException;
 import java.util.Scanner;
 import java.util.Stack;
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ public class DavisBasePromptExample {
 	/* This can be changed to whatever you like */
 	static String prompt = "davisql> ";
 	static String version = "v1.0b(example)";
-	static String copyright = "©2016 Chris Irwin Davis";
+	static String copyright = "Â©2016 Chris Irwin Davis";
 	static boolean isExit = false;
 	static ErrorMessage err=new ErrorMessage();
 	/*
@@ -33,6 +34,7 @@ public class DavisBasePromptExample {
 	 * You may choose to make it user modifiable
 	 */
 	static int pageSize = 1024; 
+	static int threshold=pageSize/10;
 
 	/* 
 	 *  The Scanner class is used to collect user commands from the prompt
@@ -211,12 +213,16 @@ public class DavisBasePromptExample {
 				break;
 			case "delete":
 				sqlcode=parseDeleteString(userCommand);
-				if (sqlcode != 0)
+				if (sqlcode == 0)
+					System.out.println("Row delete "+err.getValue(sqlcode));
+				else
 					System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
 				break;
 			case "update":
 				sqlcode=parseUpdateString(userCommand);
-				if (sqlcode != 0)
+				if (sqlcode == 0)
+					System.out.println("Row update "+err.getValue(sqlcode));
+				else
 					System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
 				break;
 			case "help":
@@ -334,7 +340,7 @@ public class DavisBasePromptExample {
 //			String clause=tokens.get(i++);
 			String clause= queryString.substring(queryString.indexOf("where")+5).trim();
 			ArrayList<String> clause_list= new ArrayList<String>(Arrays.asList(clause.split("=")));
- 			String ordinal_position[][]=queryDavis("select table_name,ordinal_position,column_key from davisbase_columns where column_name=\""+clause_list.get(0).trim()+"\"");
+ 			String ordinal_position[][]=queryDavis("select table_name,ordinal_position,column_key from davisbase_columns where column_name=\""+clause_list.get(0)+"\"");
 			for (int m=0; m<ordinal_position.length; m++)
 			{
 				if (ordinal_position[m][0].equals(tableName))
@@ -350,7 +356,7 @@ public class DavisBasePromptExample {
 			{
 				try
 				{
-					key=Integer.valueOf(clause_list.get(1).trim());
+					key=Integer.valueOf(clause_list.get(1));
 				}
 	            catch(NumberFormatException e)
 	            {
@@ -369,7 +375,7 @@ public class DavisBasePromptExample {
 			Stack<Character> st = new Stack<Character>();
 			StringBuffer word= new StringBuffer();
 			
-			search_keyword=clause_list.get(1).trim();
+			search_keyword=clause_list.get(1);
  			while (l < clause_list.get(1).length())
 			{
 				char ch=clause_list.get(1).charAt(l++);		
@@ -497,27 +503,11 @@ public class DavisBasePromptExample {
 			}
 			
 			//Filter rows
-			try
+			if (hasWhere)
 			{
-				if (hasWhere)
+				for (int j=0;j<numRec;j++)
 				{
-					for (int j=0;j<numRec;j++)
-					{
-						if (output[j][pos].equals(search_keyword))
-						{
-							temp_col=0;
-							for (int k=0;k<numCol;k++)
-							{
-								temp_array[temp_row][temp_col]=output[j][k];
-								temp_col++;
-							}
-							temp_row++;
-						}
-					}
-				}
-				else
-				{
-					for (int j=0;j<numRec;j++)
+					if (output[j][pos].equals(search_keyword))
 					{
 						temp_col=0;
 						for (int k=0;k<numCol;k++)
@@ -526,13 +516,23 @@ public class DavisBasePromptExample {
 							temp_col++;
 						}
 						temp_row++;
-					}		
+					}
 				}
 			}
-			catch (Exception NullPointerException)
+			else
 			{
-				//Do nothing
+				for (int j=0;j<numRec;j++)
+				{
+					temp_col=0;
+					for (int k=0;k<numCol;k++)
+					{
+						temp_array[temp_row][temp_col]=output[j][k];
+						temp_col++;
+					}
+					temp_row++;
+				}		
 			}
+			
 			int filter_row=0;
 			int filter_col;
 
@@ -601,6 +601,8 @@ public class DavisBasePromptExample {
 		int sqlcode=0;
 		String search_keyword = null;
 		int pos=99;
+		int key=0;
+		boolean primary_key=false;
 		ArrayList<String> tokens = new ArrayList<String>(Arrays.asList(queryString.split(" ")));
 		
 		String c_list=tokens.get(i++);	
@@ -883,7 +885,6 @@ public class DavisBasePromptExample {
 		}
 		catch(Exception e) 
 		{
-			sqlcode=-1000;
 			System.out.println(err.getValue(-1000));
 			e.printStackTrace();
 		}
@@ -1015,7 +1016,6 @@ public class DavisBasePromptExample {
 		}
 		catch(Exception e) 
 		{
-			sqlcode=-1000;
 			System.out.println(err.getValue(-1000));
 			e.printStackTrace();
 		}
@@ -1027,7 +1027,6 @@ public class DavisBasePromptExample {
 			}
 			catch(Exception e) 
 			{
-				sqlcode=-1000;
 				System.out.println(err.getValue(-1000));
 				e.printStackTrace();
 			}
@@ -1057,24 +1056,12 @@ public class DavisBasePromptExample {
 			if (!f.exists())
 				return -102;
 			
-			//column list
+			//CHECK
 			String columns=createTokens.get(i++);
-			ArrayList<String> column_list=new ArrayList<String>();
-			if (columns.equals("values"))
-			{
-				i--;
-				String table_data[][]=queryDavis("select ordinal_position,column_name from davisbase_columns where table_name=\""+tableName+"\"");
-				for (int m=0;m<table_data.length;m++)
-				{
-					column_list.add(Integer.valueOf(table_data[m][0]),table_data[m][1]);
-				}
-			}
-			else
-			{
 			//Extract column list
 			String c_list=insertString.substring(insertString.indexOf("(")+1,insertString.indexOf(")"));
-			column_list = new ArrayList<String>(Arrays.asList(c_list.split(",")));
-			}
+			ArrayList<String> column_list = new ArrayList<String>(Arrays.asList(c_list.split(",")));
+//			System.out.println(column_list);
 			
 			if (!createTokens.get(i++).equals("values"))
 				return -101;
@@ -1254,50 +1241,74 @@ public class DavisBasePromptExample {
 				}
 			}
 			
-			//Page header
+			//Write into page starts
 			totrecordSize=2+4+1+column_value_list.size()+recordSize;
-			tableFile.seek(1);
-			int numRec=tableFile.readByte();
-			//calc rowid
-			int rowid=0;
-			if (numRec == 0)
-				rowid=1;
-			else
+			tableFile.seek(0);
+			int node_type=tableFile.readByte();
+			int last_rec_loc=0;
+			int start_of_page=0;
+			int numRec=0;
+			int rc=0;
+			int return_value[]=findPage(tableFile,key);
+			start_of_page=return_value[0];
+			int m=return_value[1];
+			rc=return_value[2];
+			if (rc<0)
 			{
-				//Read address of the used record memory location
-				tableFile.seek(2);
-				int last_rec_loc=tableFile.readShort();
-				
-				//Read rowid of last used record memory location
-				tableFile.seek(last_rec_loc+2);
-				int last_rowid=tableFile.readInt();
-				rowid=last_rowid+1;
-			}
-			
-			//CHECK POSITION AND DUPLICATE	
-			//Find location
-			int m=0;
-			for(m=0;m<numRec;m++)
-			{
-				int key_location=m*2+8;
-				tableFile.seek(key_location);
-				int data_addr=tableFile.readShort();
-				tableFile.seek(data_addr+6);
-				int num_col=tableFile.readByte();
-				tableFile.seek(data_addr+6+num_col+1);
-				int rec_key=tableFile.readInt();
-				if (key==rec_key)
-				{
-					//Duplicate
-					sqlcode=-113;
-					return sqlcode;
-				}
-				else if (key<rec_key)
-				{
-					break;
-				}
+				sqlcode=rc;
+				tableFile.close();
+				return sqlcode;
 			}
 
+			//Read numRec address of the used record memory location
+			tableFile.seek(start_of_page+1);
+			numRec=tableFile.readByte();
+			tableFile.seek(start_of_page+2);
+			last_rec_loc=tableFile.readShort();
+			
+			//Split 
+			if ((last_rec_loc-totrecordSize)% pageSize < threshold)
+			{
+//				splitPage(tableFile);
+				return_value=findPage(tableFile,key);
+				start_of_page=return_value[0];
+				m=return_value[1];
+				rc=return_value[2];
+				if (rc<0)
+				{
+					sqlcode=rc;
+					tableFile.close();
+					return sqlcode;
+				}
+				//Read numRec address of the used record memory location
+				tableFile.seek(start_of_page+1);
+				numRec=tableFile.readByte();
+				tableFile.seek(start_of_page+2);
+				numRec=tableFile.readByte();
+			}
+			
+			//calc rowid
+			int rowid=0;
+			tableFile.seek(0);
+			node_type=tableFile.readByte();
+			if (node_type == 5) 
+			{
+				tableFile.seek(2);
+				rowid=1+tableFile.readInt();
+			}
+			else if (node_type == 13)
+			{
+				if (numRec == 0)
+					rowid=1;
+				else
+				{
+					//Read rowid of last used record memory location
+					tableFile.seek(last_rec_loc+2);
+					int last_rowid=tableFile.readInt();
+					rowid=last_rowid+1;
+				}
+			}
+			
 			//Insert and shift right
 			for(int n=numRec-1;n>=m;n--)
 			{
@@ -1368,7 +1379,6 @@ public class DavisBasePromptExample {
 		}
 		catch(Exception e) 
 		{
-			sqlcode=-1000;
 			System.out.println(err.getValue(-1000));
 			e.printStackTrace();
 		}
@@ -1630,7 +1640,6 @@ public class DavisBasePromptExample {
 		}
 		catch(Exception e) 
 		{
-			sqlcode=-1000;
 			System.out.println(err.getValue(-1000));
 			e.printStackTrace();
 		}
@@ -1665,7 +1674,6 @@ public class DavisBasePromptExample {
 		String primary_key_column=null;
 		String clause=null;
 		DataTypes dt=new DataTypes();
-		String [][] table_name=null;
 		ArrayList<String> tokens = new ArrayList<String>(Arrays.asList(queryString.split(" ")));
 		
 		String tableName=tokens.get(i++);
@@ -1687,9 +1695,7 @@ public class DavisBasePromptExample {
 		String set_clause= queryString.substring(queryString.indexOf("set")+3).trim();
 		ArrayList<String> set_list= new ArrayList<String>(Arrays.asList(set_clause.split("=")));
 		String column=set_list.get(0).trim();
-		String v_any=set_list.get(1).trim();
-		ArrayList<String> s_list= new ArrayList<String>(Arrays.asList(v_any.split(" ")));
-		String value_any=s_list.get(0).trim();
+		String value_any=set_list.get(1).trim();
 		int l=0;
 		Stack<Character> st = new Stack<Character>();
 		StringBuffer word= new StringBuffer();
@@ -1724,35 +1730,6 @@ public class DavisBasePromptExample {
 			return sqlcode;
 		}
 		
-//		//Update results in duplicate primary key
-//		String [][] table_name=queryDavis("select table_name,column_key from davisbase_columns where column_name=\""+column+"\"");
-//		boolean primary_key_in_set=false;
-//		for (int j=0; j<table_name.length; j++)
-//		{
-//			if (table_name[j][0].equals(tableName) && table_name[j][1].equals("pri"))
-//			{
-//					primary_key_in_set=true;
-//			}
-//		}
-//		if (primary_key_in_set)
-//		{
-//			table_name=parseQueryString("select * from "+tableName+" where "+column+"="+value);
-//			try
-//			{
-//				if (table_name.length > 2)
-//				{
-//					sqlcode=-113;	
-//					return sqlcode;
-//				}
-//			}
-//			catch (Exception NullPointerException)
-//			{
-//				//Duplicate key not found
-//				//Do nothing
-//			}	
-//		}
-
-		
 		//If where clause present
 		boolean hasWhere=false;
 		if (tokens.contains("where"))
@@ -1760,7 +1737,7 @@ public class DavisBasePromptExample {
 			hasWhere=true;
 			clause= queryString.substring(queryString.indexOf("where")+5).trim();
 			ArrayList<String> clause_list= new ArrayList<String>(Arrays.asList(clause.split("=")));
-			table_name=queryDavis("select column_name,column_key from davisbase_columns where table_name=\""+tableName+"\"");
+			String [][] table_name=queryDavis("select column_name,column_key from davisbase_columns where table_name=\""+tableName+"\"");
 			boolean primary_key=false;
 			for (int j=0; j<table_name.length; j++)
 			{
@@ -1847,6 +1824,7 @@ public class DavisBasePromptExample {
 		try 
 		{
 			tableFile = new RandomAccessFile(tableFileName, "rw");
+			String [][] table_name=null;
 			if (hasWhere)
 				table_name=parseQueryString("select "+primary_key_column+" from "+tableName+" where "+clause);
 			else
@@ -1950,7 +1928,6 @@ public class DavisBasePromptExample {
 		}
 		catch(Exception e) 
 		{
-			sqlcode=-1000;
 			System.out.println(err.getValue(-1000));
 			e.printStackTrace();
 		}
@@ -2145,5 +2122,101 @@ public class DavisBasePromptExample {
 			e.printStackTrace();
 		}
 		return str;
+	}
+	
+	static int [] findPage(RandomAccessFile tableFile,int key)
+	{
+		int start_of_page[]={0,0,0};	
+		try 
+		{
+			tableFile.seek(0);
+			int node_type=tableFile.readByte();
+			tableFile.seek(1);
+			int root_num_rec=tableFile.readByte();
+			int m=0;
+			int numRec=0;
+			if (node_type == 5)
+			{
+				int next_page=0;
+				boolean found=false;
+				for (int n=0; n<=root_num_rec || found ; n++)
+				{
+					//Next integer key in root
+					tableFile.seek(6+8*n+4);
+					int root_rec_key=tableFile.readInt();
+					if (key < root_rec_key)
+					{
+						//Next page location
+						tableFile.seek(6+8*n);
+						next_page=tableFile.readInt();
+						//Find location
+						for(m=0;m<numRec;m++)
+						{
+							int key_location=m*2+8;
+							tableFile.seek(key_location);
+							int data_addr=tableFile.readShort();
+							tableFile.seek(data_addr+6);
+							int num_col=tableFile.readByte();
+							tableFile.seek(data_addr+6+num_col+1);
+							int rec_key=tableFile.readInt();
+							if (key==rec_key)
+							{
+								//Duplicate
+								start_of_page[0]=next_page;
+								start_of_page[2]=-113;
+								found=true;
+								break;
+							}
+							else if (key<rec_key)
+							{
+								start_of_page[0]=next_page;
+								found=true;
+								break;
+							}
+						}
+						start_of_page[1]=m;
+					}
+					else if (key == root_rec_key)
+					{
+						//Duplicate
+						start_of_page[0]=next_page;
+						start_of_page[2]=-113;
+						found=true;
+					}	
+				}
+			}
+			else
+			{
+				numRec=root_num_rec;
+				for(m=0;m<numRec;m++)
+				{
+					int key_location=m*2+8;
+					tableFile.seek(key_location);
+					int data_addr=tableFile.readShort();
+					tableFile.seek(data_addr+6);
+					int num_col=tableFile.readByte();
+					tableFile.seek(data_addr+6+num_col+1);
+					int rec_key=tableFile.readInt();
+					if (key==rec_key)
+					{
+						//Duplicate
+						start_of_page[2]=-113;
+						return start_of_page;
+					}
+					else if (key<rec_key)
+					{
+						break;
+					}
+				}
+				start_of_page[1]=m;
+			}
+		} 
+		catch(Exception e) 
+		{
+			start_of_page[2]=-1000;
+			System.out.println(err.getValue(-1000));
+			e.printStackTrace();
+		}
+		return start_of_page;
 	}
 }

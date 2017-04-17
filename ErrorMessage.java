@@ -21,7 +21,7 @@ public class ErrorMessage
 		hm.put(-110, "Unrecognized constraint");
 		hm.put(-111, "Primary key column not given in where");
 		hm.put(-112, "Non integer value not supported");
-		hm.put(-113, "Inserting duplicate into primary key column");
+		hm.put(-113, "Duplicate in primary key column");
 		hm.put(-1000, "Error -1000: Unexpected error");
 		
 	}
