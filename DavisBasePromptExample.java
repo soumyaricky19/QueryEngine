@@ -9,7 +9,6 @@ import java.util.Arrays;
 import db.DataTypes;
 import db.ErrorMessage;
 
-
 /**
  *  @author Chris Irwin Davis
  *  @version 1.0
@@ -175,7 +174,7 @@ public class DavisBasePromptExample {
 					{
 						for (int j=0; j<output[i].length ; j++)
 						{
-							System.out.print(output[i][j]+"\t");
+							System.out.print(String.format("%-20s",output[i][j]));
 						}
 						rownum++;
 						System.out.println("");	
@@ -216,6 +215,11 @@ public class DavisBasePromptExample {
 				break;
 			case "update":
 				sqlcode=parseUpdateString(userCommand);
+				if (sqlcode != 0)
+					System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
+				break;
+			case "show":
+				sqlcode=parseShow(userCommand);
 				if (sqlcode != 0)
 					System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
 				break;
@@ -2145,5 +2149,37 @@ public class DavisBasePromptExample {
 			e.printStackTrace();
 		}
 		return str;
+	}
+	static int parseShow(String userCommand)
+	{
+		int sqlcode=0;
+		int rownum=0;
+		ArrayList<String> tokens = new ArrayList<String>(Arrays.asList(userCommand.split(" ")));
+		if (!tokens.get(1).equals("tables"))
+		{
+			sqlcode=-101;
+			System.out.println("Expected tables, got "+tokens.get(1));
+		}
+		String query="select table_name from davisbase_tables";
+		String [][] output= parseQueryString(query);
+		try
+		{
+			for (int i=0; i<output.length ; i++)
+			{
+				for (int j=0; j<output[i].length ; j++)
+				{
+					System.out.print(String.format("%-20s",output[i][j]));
+				}
+				rownum++;
+				System.out.println("");	
+			}
+			System.out.println("");
+			System.out.println((rownum-2)+" rows displayed");
+		}
+		catch (Exception NullPointerException)
+		{
+			//Error message already displayed
+		}
+		return sqlcode;
 	}
 }
