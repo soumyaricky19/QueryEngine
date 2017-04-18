@@ -318,7 +318,7 @@ public class DavisBasePromptExample
 		}
 		String tableName=tokens.get(i++);
 		if (tableName.equals("davisbase_columns"))
-			pageSize=1024;
+			pageSize=2048;
 		else
 			pageSize=512;
 		String tableFileName =  tableName+ ".tbl";
@@ -620,7 +620,7 @@ public class DavisBasePromptExample
 		}
 		String tableName=tokens.get(i++);
 		if (tableName.equals("davisbase_columns"))
-			pageSize=1024;
+			pageSize=2048;
 		else
 			pageSize=512;
 		String tableFileName =  tableName+ ".tbl";
@@ -820,7 +820,7 @@ public class DavisBasePromptExample
 		/* Define table file name */
 		String tableName=createTokens.get(i++);
 		if (tableName.equals("davisbase_columns"))
-			pageSize=1024;
+			pageSize=2048;
 		else
 			pageSize=512;
 		String tableFileName = tableName+ ".tbl";
@@ -941,7 +941,7 @@ public class DavisBasePromptExample
 		String tableName=tokens.get(i++);
 		
 		if (tableName.equals("davisbase_columns"))
-			pageSize=1024;
+			pageSize=2048;
 		else
 			pageSize=512;
 		String tableFileName =  tableName+ ".tbl";
@@ -1091,7 +1091,7 @@ public class DavisBasePromptExample
 			}
 			String tableName=createTokens.get(i++);
 			if (tableName.equals("davisbase_columns"))
-				pageSize=1024;
+				pageSize=2048;
 			else
 				pageSize=512;
 			String tableFileName = tableName+ ".tbl";
@@ -1297,7 +1297,7 @@ public class DavisBasePromptExample
 			}
 			
 			//Page header
-			totrecordSize=2+4+1+column_value_list.size()+recordSize;
+			totrecordSize=2+4+1+numCol+recordSize;
 			tableFile.seek(1);
 			int numRec=tableFile.readByte();
 			//calc rowid
@@ -1366,12 +1366,12 @@ public class DavisBasePromptExample
 			//Record header
 			tableFile.seek(currentLocation-totrecordSize);
 				//payload
-			int payload=1+column_value_list.size()+recordSize;
+			int payload=1+numCol+recordSize;
 			tableFile.writeShort(payload);
 				//RowID
 			tableFile.writeInt(rowid);
 				//Number of columns
-			tableFile.writeByte(column_value_list.size());
+			tableFile.writeByte(numCol);
 				//Code of each column
 			for (int j=0;j<numCol;j++)
 			{
@@ -1385,15 +1385,15 @@ public class DavisBasePromptExample
 				switch (bytes[j])
 				{
 					case 0:
-						if (!c_value[j].isEmpty())
+						if (c_value[j]!=null)
 							tableFile.writeBytes(c_value[j]);
 						break;
 					case 1:
-						if (!c_value[j].isEmpty())
+						if (c_value[j]!=null)
 							tableFile.writeByte(Integer.parseInt(c_value[j]));
 						break;
 					case 2:
-						if (!c_value[j].isEmpty())
+						if (c_value[j]!=null)
 							tableFile.writeShort(Integer.parseInt(c_value[j]));
 						break;
 					case 4:
@@ -1401,7 +1401,7 @@ public class DavisBasePromptExample
 							tableFile.writeInt(Integer.parseInt(c_value[j]));
 						break;
 					case 8:
-						if (!c_value[j].isEmpty())
+						if (c_value[j]!=null)
 							tableFile.writeDouble(Double.parseDouble(c_value[j]));
 						break;
 				} 
@@ -1447,7 +1447,7 @@ public class DavisBasePromptExample
 			}
 			String tableName=createTokens.get(i++);
 			if (tableName.equals("davisbase_columns"))
-				pageSize=1024;
+				pageSize=2048;
 			else
 				pageSize=512;
 			String tableFileName = tableName+ ".tbl";
@@ -1716,7 +1716,7 @@ public class DavisBasePromptExample
 		
 		String tableName=tokens.get(i++);
 		if (tableName.equals("davisbase_columns"))
-			pageSize=1024;
+			pageSize=2048;
 		else
 			pageSize=512;
 		String tableFileName =  tableName+ ".tbl";
@@ -1949,14 +1949,25 @@ public class DavisBasePromptExample
 						prev_len=rec_len;
 						tableFile.seek(code_loc+j);
 						c=tableFile.readByte();
-						size=dt.getSize(String.valueOf(c));
+						if (c == 0 || c == 1 || c == 2 || c == 3)
+							size=0;
+						else
+							size=dt.getSize(String.valueOf(c));
 						if (c>=12)
 						{
 							size=c-12;
 						}
 						rec_len+=size;					
 					}
-					int diff=size-value.length();
+					int diff=0;
+					if (code >= 12)
+						diff=size-value.length();
+					else
+					{
+						int s=dt.getSize(String.valueOf(code));
+						diff=size-s;
+					}
+			
 					//Change value
 					tableFile.seek(currentLocation);
 					int payload=tableFile.readShort();
@@ -1970,7 +1981,36 @@ public class DavisBasePromptExample
 					tableFile.seek(last_rec_loc+diff);
 					tableFile.writeBytes(s);
 					tableFile.seek(from_rec_loc+diff);
-					tableFile.writeBytes(value);
+					switch (code)
+					{
+						case 0:
+						case 1:
+						case 2:
+						case 3:
+							break;
+						case 4:
+							if (value!=null)
+								tableFile.writeByte(Integer.parseInt(value));
+							break;
+						case 5:
+							if (value!=null)
+								tableFile.writeShort(Integer.parseInt(value));
+							break;
+						case 6:
+						case 8:
+							if (value!=null)
+								tableFile.writeInt(Integer.parseInt(value));
+							break;
+						case 7:
+						case 9:
+						case 10:
+							if (value!=null)
+								tableFile.writeDouble(Double.parseDouble(value));
+							break;
+						default:
+							tableFile.writeBytes(value);
+					}
+
 					//Change code
 					tableFile.seek(currentLocation+diff+7+given_pos);
 					tableFile.writeByte(code);
@@ -2164,25 +2204,34 @@ public class DavisBasePromptExample
 				int size=dt.getSize(String.valueOf(code));
 				tableFile.seek(data_addr+7+num_col+cumul_size);
 				String s=null;
-				switch (size)
+				switch (code)
 				{
-					case 99:
+					case 0:
+					case 1:
+					case 2:
+					case 3:
+						s="null";
+						break;
+					case 4:
+						s=String.valueOf(tableFile.readByte());
+						break;
+					case 5:
+						s=String.valueOf(tableFile.readShort());
+						break;
+					case 6:
+					case 8:
+						s=String.valueOf(tableFile.readInt());
+						break;
+					case 7:
+					case 9:
+					case 10:
+						s=String.valueOf(tableFile.readDouble());
+						break;
+					default:
 						size=code-12;
 						byte b[]=new byte[size];
 						tableFile.readFully(b);
 						s=new String(b);
-						break;
-					case 1:
-						s=String.valueOf(tableFile.readByte());
-						break;
-					case 2:
-						s=String.valueOf(tableFile.readShort());
-						break;
-					case 4:
-						s=String.valueOf(tableFile.readInt());
-						break;
-					case 8:
-						s=String.valueOf(tableFile.readDouble());
 						break;
 				} 
 				cumul_size+=size;
