@@ -22,6 +22,7 @@ public class ErrorMessage
 		hm.put(-111, "Primary key column not given in where");
 		hm.put(-112, "Non integer value not supported");
 		hm.put(-113, "Duplicate in primary key column");
+		hm.put(-114, "Unsupported operator in where clause");
 		hm.put(-1000, "Error -1000: Unexpected error");
 		
 	}

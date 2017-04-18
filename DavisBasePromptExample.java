@@ -4,6 +4,7 @@ import java.io.RandomAccessFile;
 import java.io.File;
 import java.util.Scanner;
 import java.util.Stack;
+import java.util.regex.Pattern;
 import java.util.ArrayList;
 import java.util.Arrays;
 import db.DataTypes;
@@ -305,6 +306,8 @@ public class DavisBasePromptExample
 		int numRec=0;
 		int key=0;
 		boolean primary_key=false;
+		boolean is_equal=false;
+		boolean where_is_number=false;
 		String search_keyword = null;
 		int pos=99;
 		ArrayList<String> tokens = new ArrayList<String>(Arrays.asList(queryString.split(" ")));
@@ -331,6 +334,7 @@ public class DavisBasePromptExample
 		}
 		//If where clause present
 		boolean hasWhere=false;
+		String operator=null;
 		if (i<tokens.size())
 		{
 			hasWhere=true;
@@ -341,9 +345,37 @@ public class DavisBasePromptExample
 				return null;
 			}
 //			String clause=tokens.get(i++);
+			
 			String clause= queryString.substring(queryString.indexOf("where")+5).trim();
-			ArrayList<String> clause_list= new ArrayList<String>(Arrays.asList(clause.split("=")));
- 			String ordinal_position[][]=queryDavis("select table_name,ordinal_position,column_key from davisbase_columns where column_name=\""+clause_list.get(0).trim()+"\"");
+			Pattern p=Pattern.compile("<=|>=|!=|=|<|>");
+//			ArrayList<String> clause_list= new ArrayList<String>(Arrays.asList(clause.split("=")));
+			ArrayList<String> clause_list=new ArrayList<String>(Arrays.asList(p.split(clause)));
+			if (clause_list.size()!= 2)
+			{
+				sqlcode=-101;
+				System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
+				return null;
+			}
+			if (clause.contains("="))
+				{operator="=";is_equal=true;}
+			if(clause.contains("<"))
+				{operator="<";is_equal=false;}
+			if(clause.contains(">"))
+				{operator=">";is_equal=false;}
+			if(clause.contains("<="))
+				{operator="<=";is_equal=false;}
+			if(clause.contains(">="))
+				{operator=">=";is_equal=false;}
+			if(clause.contains("!="))
+				{operator="!=";is_equal=false;}
+			if (operator == null)
+			{
+				sqlcode=-114;
+				System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
+				return null;
+			}
+			
+ 			String ordinal_position[][]=queryDavis("select table_name,ordinal_position,column_key,data_type from davisbase_columns where column_name=\""+clause_list.get(0).trim()+"\"");
 			for (int m=0; m<ordinal_position.length; m++)
 			{
 				if (ordinal_position[m][0].equals(tableName))
@@ -351,6 +383,8 @@ public class DavisBasePromptExample
 					if (ordinal_position[m][2].equals("pri"))
 						primary_key=true;
 					pos=Integer.parseInt(ordinal_position[m][1]);
+					if(!ordinal_position[m][3].equals("text"))
+						where_is_number=true;
 					break;
 				}
 			}
@@ -379,6 +413,13 @@ public class DavisBasePromptExample
 			StringBuffer word= new StringBuffer();
 			
 			search_keyword=clause_list.get(1).trim();
+			if (search_keyword.isEmpty())
+			{
+				sqlcode=-101;
+				System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
+				return null;
+			}
+			
  			while (l < clause_list.get(1).length())
 			{
 				char ch=clause_list.get(1).charAt(l++);		
@@ -448,7 +489,7 @@ public class DavisBasePromptExample
 				tableFile.seek(data_addr+6+num_col+1);
 				int rec_key=tableFile.readInt();
 				//Read record
-				if (primary_key)
+				if (primary_key && is_equal)
 				{
 					if (key==rec_key)
 					{
@@ -512,7 +553,8 @@ public class DavisBasePromptExample
 				{
 					for (int j=0;j<numRec;j++)
 					{
-						if (output[j][pos].equals(search_keyword))
+						boolean true_row=checkRow(output[j][pos],search_keyword,operator,where_is_number);
+						if (true_row)	
 						{
 							temp_col=0;
 							for (int k=0;k<numCol;k++)
@@ -2276,5 +2318,85 @@ public class DavisBasePromptExample
 			//Error message already displayed
 		}
 		return sqlcode;
+	}
+	static boolean checkRow(String output,String search_keyword,String operator,boolean where_is_number)
+	{
+		boolean true_row=false;
+		switch(operator)
+		{
+			case "=":
+				if (where_is_number)
+				{
+					if (Integer.parseInt(output)==Integer.parseInt(search_keyword))
+						true_row=true;
+				}
+				else
+				{
+					if (output.compareTo(search_keyword) == 0)
+						true_row=true;
+				}
+				break;
+			case "<=":
+				if (where_is_number)
+				{
+					if (Integer.parseInt(output)<=Integer.parseInt(search_keyword))
+						true_row=true;
+				}
+				else
+				{
+					if (output.compareTo(search_keyword) <= 0)
+						true_row=true;
+				}
+				break;
+			case ">=":
+				if (where_is_number)
+				{
+					if (Integer.parseInt(output)>=Integer.parseInt(search_keyword))
+						true_row=true;
+				}
+				else
+				{
+					if (output.compareTo(search_keyword) >= 0)
+						true_row=true;
+				}
+				break;
+			case "<":
+				if (where_is_number)
+				{
+					if (Integer.parseInt(output)<Integer.parseInt(search_keyword))
+						true_row=true;
+				}
+				else
+				{
+					if (output.compareTo(search_keyword) < 0)
+						true_row=true;
+				}
+				break;
+			case ">":
+				if (where_is_number)
+				{
+					if (Integer.parseInt(output)>Integer.parseInt(search_keyword))
+						true_row=true;
+				}
+				else
+				{
+					if (output.compareTo(search_keyword) > 0)
+						true_row=true;
+				}
+				break;
+			case "!=":
+				if (where_is_number)
+				{
+					if (Integer.parseInt(output) != Integer.parseInt(search_keyword))
+						true_row=true;
+				}
+				else
+				{
+					if (output.compareTo(search_keyword) != 0)
+						true_row=true;
+				}
+				break;
+		}
+		return true_row;
 	}
 }
