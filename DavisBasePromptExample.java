@@ -19,7 +19,8 @@ import db.ErrorMessage;
  *  </b>
  *
  */
-public class DavisBasePromptExample {
+public class DavisBasePromptExample 
+{
 
 	/* This can be changed to whatever you like */
 	static String prompt = "davisql> ";
@@ -31,7 +32,7 @@ public class DavisBasePromptExample {
 	 * Page size for alll files is 512 bytes by default.
 	 * You may choose to make it user modifiable
 	 */
-	static int pageSize = 1024; 
+	static int pageSize = 512; 
 
 	/* 
 	 *  The Scanner class is used to collect user commands from the prompt
@@ -247,7 +248,7 @@ public class DavisBasePromptExample {
 	 */
 	public static int dropTable(String dropTableString) 
 	{
-		System.out.println("QUERY: "+dropTableString);
+//		System.out.println("QUERY: "+dropTableString);
 		int i=1;
 		int sqlcode=0;
 		ArrayList<String> tokens = new ArrayList<String>(Arrays.asList(dropTableString.split(" ")));
@@ -297,7 +298,7 @@ public class DavisBasePromptExample {
 	 */
 	public static String [][] parseQueryString(String queryString) 
 	{
-		System.out.println("QUERY: "+queryString);
+//		System.out.println("QUERY: "+queryString);
 		int i=1;
 		int sqlcode=0;
 		int numCol=0;
@@ -316,6 +317,8 @@ public class DavisBasePromptExample {
 			return null;
 		}
 		String tableName=tokens.get(i++);
+		if (tableName.equals("davisbase_columns"))
+			pageSize=1024;
 		String tableFileName =  tableName+ ".tbl";
 		File f = new File(tableFileName);
 		if (!f.exists())
@@ -598,7 +601,8 @@ public class DavisBasePromptExample {
 	
 	public static String [][] queryDavis(String queryString) 
 	{
-		System.out.println("DAVIS QUERY: "+queryString);
+		
+//		System.out.println("DAVIS QUERY: "+queryString);
 		int i=1;
 		int numCol=0;
 		int numRec=0;
@@ -613,6 +617,8 @@ public class DavisBasePromptExample {
 			return null;
 		}
 		String tableName=tokens.get(i++);
+		if (tableName.equals("davisbase_columns"))
+			pageSize=1024;
 		String tableFileName =  tableName+ ".tbl";
 		File f = new File(tableFileName);
 		if (!f.exists())
@@ -809,10 +815,10 @@ public class DavisBasePromptExample {
 		}
 		/* Define table file name */
 		String tableName=createTokens.get(i++);
+		if (tableName.equals("davisbase_columns"))
+			pageSize=1024;
 		String tableFileName = tableName+ ".tbl";
 		File f = new File(tableFileName);
-		if (f.exists())
-			return -104;
 
 		/* YOUR CODE GOES HERE */
 		
@@ -840,8 +846,13 @@ public class DavisBasePromptExample {
 				
 				if (!str.equals("first"))
 				{
-					insertDavis("insert into davisbase_tables (row_id,table_name) values (0,\""+tableName+"\")","meta");
-					
+					int temp_sqlcode=0;
+					temp_sqlcode=insertDavis("insert into davisbase_tables (row_id,table_name) values (0,\""+tableName+"\")","meta");
+					if (temp_sqlcode == -113)
+					{
+						sqlcode=-104;
+						return sqlcode;
+					}
 					//Extract column list
 					String c_list=createTableString.substring(createTableString.indexOf("(")+1,createTableString.indexOf(")"));
 					ArrayList<String> column_list = new ArrayList<String>(Arrays.asList(c_list.split(",")));
@@ -878,7 +889,7 @@ public class DavisBasePromptExample {
 								}
 							}
 						}
-						insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) "
+						temp_sqlcode=insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) "
 								+ "values (0,\""+tableName+"\",\""+c.get(0)+"\",\""+c.get(1)+"\",\""+j+"\",\""+nullable+"\",\""+prim+"\")","meta");
 					}
 					return sqlcode;
@@ -898,7 +909,7 @@ public class DavisBasePromptExample {
 	
 	public static int parseDeleteString(String deleteString) 
 	{
-		System.out.println("QUERY: "+deleteString);;
+//		System.out.println("QUERY: "+deleteString);;
 		RandomAccessFile tableFile=null;
 		int sqlcode=0;
 		int i=1;
@@ -913,6 +924,9 @@ public class DavisBasePromptExample {
 			return sqlcode;
 		}
 		String tableName=tokens.get(i++);
+		
+		if (tableName.equals("davisbase_columns"))
+			pageSize=1024;
 		String tableFileName =  tableName+ ".tbl";
 		File f = new File(tableFileName);
 		if (!f.exists())
@@ -1056,6 +1070,8 @@ public class DavisBasePromptExample {
 				return -101;
 			}
 			String tableName=createTokens.get(i++);
+			if (tableName.equals("davisbase_columns"))
+				pageSize=1024;
 			String tableFileName = tableName+ ".tbl";
 			File f = new File(tableFileName);
 			if (!f.exists())
@@ -1084,7 +1100,7 @@ public class DavisBasePromptExample {
 				return -101;
 			
 			//Extract values
-			String column_values=insertString.substring(insertString.indexOf("values")+7,insertString.lastIndexOf(')')+1);
+			String column_values=insertString.substring(insertString.indexOf("values")+6,insertString.lastIndexOf(')')+1);
 			int k=0;
 			Stack<Character> st = new Stack<Character>();
 			StringBuffer word= new StringBuffer();
@@ -1408,6 +1424,8 @@ public class DavisBasePromptExample {
 				
 			}
 			String tableName=createTokens.get(i++);
+			if (tableName.equals("davisbase_columns"))
+				pageSize=1024;
 			String tableFileName = tableName+ ".tbl";
 			File f = new File(tableFileName);
 			if (!f.exists())
@@ -1427,7 +1445,7 @@ public class DavisBasePromptExample {
 				return -101;
 			
 			//Extract values
-			String column_values=insertString.substring(insertString.indexOf("values")+7,insertString.lastIndexOf(')')+1);
+			String column_values=insertString.substring(insertString.indexOf("values")+6,insertString.lastIndexOf(')')+1);
 			int k=0;
 			Stack<Character> st = new Stack<Character>();
 			StringBuffer word= new StringBuffer();
@@ -1656,7 +1674,7 @@ public class DavisBasePromptExample {
 
 	public static int parseUpdateString(String queryString) 
 	{
-		System.out.println("QUERY: "+queryString);
+//		System.out.println("QUERY: "+queryString);
 		RandomAccessFile tableFile=null;
 		int i=1;
 		int sqlcode=0;
@@ -1673,6 +1691,8 @@ public class DavisBasePromptExample {
 		ArrayList<String> tokens = new ArrayList<String>(Arrays.asList(queryString.split(" ")));
 		
 		String tableName=tokens.get(i++);
+		if (tableName.equals("davisbase_columns"))
+			pageSize=1024;
 		String tableFileName =  tableName+ ".tbl";
 		File f = new File(tableFileName);
 		if (!f.exists())
