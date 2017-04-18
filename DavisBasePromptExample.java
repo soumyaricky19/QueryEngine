@@ -319,6 +319,8 @@ public class DavisBasePromptExample
 		String tableName=tokens.get(i++);
 		if (tableName.equals("davisbase_columns"))
 			pageSize=1024;
+		else
+			pageSize=512;
 		String tableFileName =  tableName+ ".tbl";
 		File f = new File(tableFileName);
 		if (!f.exists())
@@ -619,6 +621,8 @@ public class DavisBasePromptExample
 		String tableName=tokens.get(i++);
 		if (tableName.equals("davisbase_columns"))
 			pageSize=1024;
+		else
+			pageSize=512;
 		String tableFileName =  tableName+ ".tbl";
 		File f = new File(tableFileName);
 		if (!f.exists())
@@ -817,6 +821,8 @@ public class DavisBasePromptExample
 		String tableName=createTokens.get(i++);
 		if (tableName.equals("davisbase_columns"))
 			pageSize=1024;
+		else
+			pageSize=512;
 		String tableFileName = tableName+ ".tbl";
 //		File f = new File(tableFileName);
 		if (!str.equals("first"))
@@ -936,6 +942,8 @@ public class DavisBasePromptExample
 		
 		if (tableName.equals("davisbase_columns"))
 			pageSize=1024;
+		else
+			pageSize=512;
 		String tableFileName =  tableName+ ".tbl";
 		File f = new File(tableFileName);
 		if (!f.exists())
@@ -1084,6 +1092,8 @@ public class DavisBasePromptExample
 			String tableName=createTokens.get(i++);
 			if (tableName.equals("davisbase_columns"))
 				pageSize=1024;
+			else
+				pageSize=512;
 			String tableFileName = tableName+ ".tbl";
 			File f = new File(tableFileName);
 			if (!f.exists())
@@ -1438,6 +1448,8 @@ public class DavisBasePromptExample
 			String tableName=createTokens.get(i++);
 			if (tableName.equals("davisbase_columns"))
 				pageSize=1024;
+			else
+				pageSize=512;
 			String tableFileName = tableName+ ".tbl";
 			File f = new File(tableFileName);
 			if (!f.exists())
@@ -1705,6 +1717,8 @@ public class DavisBasePromptExample
 		String tableName=tokens.get(i++);
 		if (tableName.equals("davisbase_columns"))
 			pageSize=1024;
+		else
+			pageSize=512;
 		String tableFileName =  tableName+ ".tbl";
 		File f = new File(tableFileName);
 		if (!f.exists())

@@ -10,7 +10,7 @@ public class ErrorMessage
 		hm.put(0,"Successful");
 		hm.put(100,"No records found");
 		hm.put(-101, "Incorrect syntax");
-		hm.put(-102, "Error -102: table not found");
+		hm.put(-102, "Table not found");
 		hm.put(-103, "Cannot find");
 		hm.put(-104, "Table already exists");
 		hm.put(-105, "Incorrect column name");
