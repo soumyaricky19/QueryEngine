@@ -210,7 +210,7 @@ public class DavisBasePromptExample
 					System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
 				break;
 			case "delete":
-				sqlcode=parseDeleteString(userCommand);
+				sqlcode=parseDeleteString(userCommand,"user");
 				if (sqlcode != 0)
 					System.out.println("SQLCODE "+sqlcode+": "+err.getValue(sqlcode));
 				break;
@@ -264,7 +264,7 @@ public class DavisBasePromptExample
 			sqlcode=-102;
 			return sqlcode;
 		}
-		sqlcode=parseDeleteString("delete from davisbase_tables where row_id="+Integer.valueOf(table_names[0][0]));
+		sqlcode=parseDeleteString("delete from davisbase_tables where row_id="+Integer.valueOf(table_names[0][0]),"meta");
 		if (sqlcode!=0)
 			return sqlcode;
 		String column_names[][]=queryDavis("select row_id from davisbase_columns where table_name=\""+tableName+"\"");
@@ -275,7 +275,7 @@ public class DavisBasePromptExample
 		}
 		for(int j=0;j<column_names.length;j++)
 		{
-			sqlcode=parseDeleteString("delete from davisbase_columns where row_id="+Integer.valueOf(column_names[j][0]));
+			sqlcode=parseDeleteString("delete from davisbase_columns where row_id="+Integer.valueOf(column_names[j][0]),"meta");
 			if (sqlcode!=0)
 				return sqlcode;
 		}
@@ -818,7 +818,16 @@ public class DavisBasePromptExample
 		if (tableName.equals("davisbase_columns"))
 			pageSize=1024;
 		String tableFileName = tableName+ ".tbl";
-		File f = new File(tableFileName);
+//		File f = new File(tableFileName);
+		if (!str.equals("first"))
+		{
+			String table_names[][]=queryDavis("select row_id from davisbase_tables where table_name=\""+tableName+"\"");
+			if (table_names.length!=0)
+			{
+				sqlcode=-104;
+				return sqlcode;
+			}
+		}
 
 		/* YOUR CODE GOES HERE */
 		
@@ -907,7 +916,7 @@ public class DavisBasePromptExample
 	}
 	
 	
-	public static int parseDeleteString(String deleteString) 
+	public static int parseDeleteString(String deleteString,String str) 
 	{
 //		System.out.println("QUERY: "+deleteString);;
 		RandomAccessFile tableFile=null;
@@ -1026,16 +1035,19 @@ public class DavisBasePromptExample
 				}
 			}
 			tableFile.close();
-			if (table_name.length > 2)
-				System.out.println((table_name.length-2)+" rows affected.");
-			else
-				sqlcode=100;
+			if (str.equals("user"))
+			{
+				if (table_name.length > 2)
+					System.out.println((table_name.length-2)+" rows affected.");
+				else
+					sqlcode=100;
+			}
 		}
 		catch(Exception e) 
 		{
 			sqlcode=-1000;
 			System.out.println(err.getValue(-1000));
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 		finally 
 		{
@@ -1045,9 +1057,9 @@ public class DavisBasePromptExample
 			}
 			catch(Exception e) 
 			{
-				sqlcode=-1000;
-				System.out.println(err.getValue(-1000));
-				e.printStackTrace();
+//				sqlcode=-1000;
+//				System.out.println(err.getValue(-1000));
+//				e.printStackTrace();
 			}
 	    }
 
@@ -1400,8 +1412,8 @@ public class DavisBasePromptExample
 			}
 			catch(Exception e) 
 			{
-				System.out.println(err.getValue(-1000));
-				e.printStackTrace();
+//				System.out.println(err.getValue(-1000));
+//				e.printStackTrace();
 			}
 	    }
 	return sqlcode;
@@ -1664,8 +1676,8 @@ public class DavisBasePromptExample
 			}
 			catch(Exception e) 
 			{
-				System.out.println(err.getValue(-1000));
-				e.printStackTrace();
+//				System.out.println(err.getValue(-1000));
+//				e.printStackTrace();
 			}
 	    }
 	return sqlcode;
@@ -1986,8 +1998,8 @@ public class DavisBasePromptExample
 			}
 			catch(Exception e) 
 			{
-				System.out.println(err.getValue(-1000));
-				e.printStackTrace();
+//				System.out.println(err.getValue(-1000));
+//				e.printStackTrace();
 			}
 		}
 		return sqlcode;
