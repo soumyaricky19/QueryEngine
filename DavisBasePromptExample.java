@@ -269,6 +269,11 @@ public class DavisBasePromptExample
 			System.out.println("Expected table, got "+tokens.get(i-1));
 		}
 		String tableName=tokens.get(i);
+		String path=null;
+		if (tableName.equals("davisbase_columns") || tableName.equals("davisbase_tables"))
+			path="data/catalog/";
+		else
+			path="data/user_data/";
 		String table_names[][]=queryDavis("select row_id from davisbase_tables where table_name=\""+tableName+"\"");
 		if (table_names.length==0)
 		{
@@ -292,13 +297,13 @@ public class DavisBasePromptExample
 		}
 		try
 		{
-			File f =new File(tableName+".tbl");
+			File f=new File(path+tableName+".tbl");
 			f.delete();
 		}
 		catch(Exception e) 
 		{
 			System.out.println(err.getValue(-1000));
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 		return sqlcode;
 	}
@@ -337,7 +342,7 @@ public class DavisBasePromptExample
 			path="data/user_data/";
 		
 		
-		String tableFileName =  tableName+ ".tbl";
+		String tableFileName = tableName+ ".tbl";
 		File f = new File(path+tableFileName);
 		if (!f.exists())
 		{
@@ -440,6 +445,7 @@ public class DavisBasePromptExample
 			    switch (ch)
 			    {
 			    	case '"':	
+			    	case '\'':
 			    		if (st.isEmpty())
 			    			st.push('"');
 			    		else if(st.peek() == '"') 	
@@ -655,7 +661,7 @@ public class DavisBasePromptExample
 		catch(Exception e) 
 		{
 			System.out.println(err.getValue(-1000));
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 		return null;
 	}
@@ -719,6 +725,7 @@ public class DavisBasePromptExample
 			    switch (ch)
 			    {
 			    	case '"':	
+			    	case '\'':
 			    		if (st.isEmpty())
 			    			st.push('"');
 			    		else if(st.peek() == '"') 	
@@ -865,7 +872,7 @@ public class DavisBasePromptExample
 		catch(Exception e) 
 		{
 			System.out.println(err.getValue(-1000));
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 		return null;
 	}
@@ -986,7 +993,7 @@ public class DavisBasePromptExample
 		{
 			sqlcode=-1000;
 			System.out.println(err.getValue(-1000));
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 
 		return sqlcode;
@@ -1239,7 +1246,8 @@ public class DavisBasePromptExample
 //							System.out.println(word);
 						}
 						break;
-			    	case '"':	
+			    	case '"':
+			    	case '\'':
 			    		if (st.peek() == '(')
 			    			st.push('"');
 			    		else
@@ -1496,7 +1504,7 @@ public class DavisBasePromptExample
 		{
 			sqlcode=-1000;
 			System.out.println(err.getValue(-1000));
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 		finally 
 		{
@@ -1594,6 +1602,7 @@ public class DavisBasePromptExample
 						}
 						break;
 			    	case '"':	
+			    	case '\'':
 			    		if (st.peek() == '(')
 			    			st.push('"');
 			    		else
@@ -1769,7 +1778,7 @@ public class DavisBasePromptExample
 		{
 			sqlcode=-1000;
 			System.out.println(err.getValue(-1000));
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 		finally 
 		{
@@ -1844,6 +1853,7 @@ public class DavisBasePromptExample
 		    switch (ch)
 		    {
 		    	case '"':	
+		    	case '\'':
 		    		if (st.isEmpty())
 		    			st.push('"');
 		    		else if(st.peek() == '"') 	
@@ -2075,9 +2085,8 @@ public class DavisBasePromptExample
 					tableFile.seek(last_rec_loc);
 					byte b[]=new byte[from_rec_loc-last_rec_loc];
 					tableFile.readFully(b);
-					String s=new String(b);
 					tableFile.seek(last_rec_loc+diff);
-					tableFile.writeBytes(s);
+					tableFile.write(b);
 					tableFile.seek(from_rec_loc+diff);
 					switch (code)
 					{
@@ -2095,9 +2104,12 @@ public class DavisBasePromptExample
 								tableFile.writeShort(Integer.parseInt(value));
 							break;
 						case 6:
-						case 8:
 							if (value!=null)
 								tableFile.writeInt(Integer.parseInt(value));
+							break;
+						case 8:
+							if (value!=null)
+								tableFile.writeFloat(Float.parseFloat(value));
 							break;
 						case 7:
 						case 9:
@@ -2140,7 +2152,7 @@ public class DavisBasePromptExample
 		{
 			sqlcode=-1000;
 			System.out.println(err.getValue(-1000));
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 		finally 
 		{
@@ -2339,7 +2351,7 @@ public class DavisBasePromptExample
 		catch(Exception e) 
 		{
 			System.out.println(err.getValue(-1000));
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 		return str;
 	}

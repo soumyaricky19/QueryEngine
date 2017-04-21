@@ -11,6 +11,7 @@ public class DataTypes {
 		{"int", "06","4"},
 		{"bigint", "07","8"},
 		{"real", "08","4"},
+		{"float","08","4"},
 		{"double", "09","8"},
 		{"datetime", "10","8"},
 		{"date", "11","8"},
