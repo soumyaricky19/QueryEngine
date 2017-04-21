@@ -1828,12 +1828,12 @@ public class DavisBasePromptExample
 			return sqlcode;
 		}
 		
-		String set_clause= queryString.substring(queryString.indexOf("set")+3).trim();
+		String set_clause= queryString.substring(queryString.indexOf("set")+3,queryString.indexOf("where")).trim();
 		ArrayList<String> set_list= new ArrayList<String>(Arrays.asList(set_clause.split("=")));
 		String column=set_list.get(0).trim();
-		String v_any=set_list.get(1).trim();
-		ArrayList<String> s_list= new ArrayList<String>(Arrays.asList(v_any.split(" ")));
-		String value_any=s_list.get(0).trim();
+		String value_any=set_list.get(1).trim();
+//		ArrayList<String> s_list= new ArrayList<String>(Arrays.asList(v_any.split(" ")));
+//		String value_any=s_list.get(0).trim();
 		int l=0;
 		Stack<Character> st = new Stack<Character>();
 		StringBuffer word= new StringBuffer();
