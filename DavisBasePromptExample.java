@@ -1474,28 +1474,37 @@ public class DavisBasePromptExample
 			//Record 
 			for (int j=0; j<numCol;j++)
 			{
-				switch (bytes[j])
+				switch (code[j])
 				{
 					case 0:
-						if (c_value[j]!=null)
-							tableFile.writeBytes(c_value[j]);
-						break;
 					case 1:
+					case 2:
+					case 3:
+						break;
+					case 4:
 						if (c_value[j]!=null)
 							tableFile.writeByte(Integer.parseInt(c_value[j]));
 						break;
-					case 2:
+					case 5:
 						if (c_value[j]!=null)
 							tableFile.writeShort(Integer.parseInt(c_value[j]));
 						break;
-					case 4:
+					case 6:
 						if (c_value[j]!=null)
 							tableFile.writeInt(Integer.parseInt(c_value[j]));
 						break;
 					case 8:
 						if (c_value[j]!=null)
+							tableFile.writeFloat(Float.parseFloat(c_value[j]));
+						break;
+					case 7:
+					case 9:
+					case 10:
+						if (c_value[j]!=null)
 							tableFile.writeDouble(Double.parseDouble(c_value[j]));
 						break;
+					default:
+						tableFile.writeBytes(c_value[j]);
 				} 
 			}
 			tableFile.close();
@@ -2329,8 +2338,10 @@ public class DavisBasePromptExample
 						s=String.valueOf(tableFile.readShort());
 						break;
 					case 6:
-					case 8:
 						s=String.valueOf(tableFile.readInt());
+						break;
+					case 8:
+						s=String.valueOf(tableFile.readFloat());
 						break;
 					case 7:
 					case 9:
