@@ -53,24 +53,34 @@ public class DavisBasePromptExample
 		splashScreen();
 
 		//Initialize metadata
-		File f1 = new File("davisbase_tables.tbl");
-		File f2 = new File("davisbase_columns.tbl");
+		File f1 = new File("data/catalog/davisbase_tables.tbl");
+		File f2 = new File("data/catalog/davisbase_columns.tbl");
 		if (!f1.exists() || !f2.exists())
 		{
-			parseCreateString("create table davisbase_tables (row_id int,table_name text not null)","first");
-			parseCreateString("create table davisbase_columns (row_id int,table_name text not null,column_name text not null,data_type text not null,ordinal_position tinyint not null,is_nullable text not null)","first");
- 			insertDavis("insert into davisbase_tables (row_id,table_name) values (1,\"davisbase_tables\")","tables");
- 			insertDavis("insert into davisbase_tables (row_id,table_name) values (2,\"davisbase_columns\")","tables");
- 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (1,\"davisbase_tables\",\"row_id\",\"int\",\"0\",\"no\",\"pri\")","columns");
- 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (2,\"davisbase_tables\",\"table_name\",\"text\",\"1\",\"no\",null)","columns");
- 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (3,\"davisbase_columns\",\"row_id\",\"int\",\"0\",\"no\",\"pri\")","columns");
- 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (4,\"davisbase_columns\",\"table_name\",\"text\",\"1\",\"no\",null)","columns");
- 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (5,\"davisbase_columns\",\"column_name\",\"text\",\"2\",\"no\",null)","columns");
- 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (6,\"davisbase_columns\",\"data_type\",\"text\",\"3\",\"no\",null)","columns");
- 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (7,\"davisbase_columns\",\"ordinal_position\",\"tinyint\",\"4\",\"no\",null)","columns");
- 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (8,\"davisbase_columns\",\"is_nullable\",\"text\",\"5\",\"no\",null)","columns");
- 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (9,\"davisbase_columns\",\"column_key\",\"text\",\"6\",\"no\",null)","columns");
- 			System.out.println("Davis tables created.");
+			File dir1 = new File("data");
+			File dir2 = new File("data/catalog");
+			File dir3 = new File("data/user_data");
+            if (dir1.mkdir() && dir2.mkdir() && dir3.mkdir()) 
+            {
+				parseCreateString("create table davisbase_tables (row_id int,table_name text not null)","first");
+				parseCreateString("create table davisbase_columns (row_id int,table_name text not null,column_name text not null,data_type text not null,ordinal_position tinyint not null,is_nullable text not null)","first");
+	 			insertDavis("insert into davisbase_tables (row_id,table_name) values (1,\"davisbase_tables\")","tables");
+	 			insertDavis("insert into davisbase_tables (row_id,table_name) values (2,\"davisbase_columns\")","tables");
+	 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (1,\"davisbase_tables\",\"row_id\",\"int\",\"0\",\"no\",\"pri\")","columns");
+	 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (2,\"davisbase_tables\",\"table_name\",\"text\",\"1\",\"no\",null)","columns");
+	 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (3,\"davisbase_columns\",\"row_id\",\"int\",\"0\",\"no\",\"pri\")","columns");
+	 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (4,\"davisbase_columns\",\"table_name\",\"text\",\"1\",\"no\",null)","columns");
+	 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (5,\"davisbase_columns\",\"column_name\",\"text\",\"2\",\"no\",null)","columns");
+	 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (6,\"davisbase_columns\",\"data_type\",\"text\",\"3\",\"no\",null)","columns");
+	 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (7,\"davisbase_columns\",\"ordinal_position\",\"tinyint\",\"4\",\"no\",null)","columns");
+	 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (8,\"davisbase_columns\",\"is_nullable\",\"text\",\"5\",\"no\",null)","columns");
+	 			insertDavis("insert into davisbase_columns (row_id,table_name,column_name,data_type,ordinal_position,is_nullable,column_key) values (9,\"davisbase_columns\",\"column_key\",\"text\",\"6\",\"no\",null)","columns");
+	 			System.out.println("METADATA TABLES CREATED");
+            }
+            else
+            {
+            	System.out.println("Error creating directory. Metadata NOT initialized!");
+            }
 		}		
 
 		
@@ -320,12 +330,15 @@ public class DavisBasePromptExample
 			return null;
 		}
 		String tableName=tokens.get(i++);
-		if (tableName.equals("davisbase_columns"))
-			pageSize=2048;
+		String path=null;
+		if (tableName.equals("davisbase_columns") || tableName.equals("davisbase_tables"))
+			path="data/catalog/";
 		else
-			pageSize=512;
+			path="data/user_data/";
+		
+		
 		String tableFileName =  tableName+ ".tbl";
-		File f = new File(tableFileName);
+		File f = new File(path+tableFileName);
 		if (!f.exists())
 		{
 			sqlcode=-102;
@@ -460,7 +473,11 @@ public class DavisBasePromptExample
 			/*  Create RandomAccessFile tableFile in read-write mode.
 			 *  Note that this doesn't create the table file in the correct directory structure
 			 */
-			RandomAccessFile tableFile = new RandomAccessFile(tableFileName, "r");
+			if (tableName.equals("davisbase_columns"))
+				pageSize=1536;
+			else
+				pageSize=512;
+			RandomAccessFile tableFile = new RandomAccessFile(path+tableFileName, "r");
 			tableFile.seek(1);
 			numRec=tableFile.readByte();
 
@@ -661,12 +678,14 @@ public class DavisBasePromptExample
 			return null;
 		}
 		String tableName=tokens.get(i++);
-		if (tableName.equals("davisbase_columns"))
-			pageSize=2048;
+		String path=null;
+		if (tableName.equals("davisbase_columns") || tableName.equals("davisbase_tables"))
+			path="data/catalog/";
 		else
-			pageSize=512;
+			path="data/user_data/";
+		
 		String tableFileName =  tableName+ ".tbl";
-		File f = new File(tableFileName);
+		File f = new File(path+tableFileName);
 		if (!f.exists())
 		{
 			sqlcode= -102;
@@ -733,7 +752,11 @@ public class DavisBasePromptExample
 			/*  Create RandomAccessFile tableFile in read-write mode.
 			 *  Note that this doesn't create the table file in the correct directory structure
 			 */
-			RandomAccessFile tableFile = new RandomAccessFile(tableFileName, "r");
+			if (tableName.equals("davisbase_columns"))
+				pageSize=1536;
+			else
+				pageSize=512;
+			RandomAccessFile tableFile = new RandomAccessFile(path+tableFileName, "r");
 			tableFile.seek(1);
 			numRec=tableFile.readByte();
 			//HARD CODED
@@ -861,10 +884,12 @@ public class DavisBasePromptExample
 		}
 		/* Define table file name */
 		String tableName=createTokens.get(i++);
-		if (tableName.equals("davisbase_columns"))
-			pageSize=2048;
+		String path=null;
+		if (tableName.equals("davisbase_columns") || tableName.equals("davisbase_tables"))
+			path="data/catalog/";
 		else
-			pageSize=512;
+			path="data/user_data/";
+		
 		String tableFileName = tableName+ ".tbl";
 //		File f = new File(tableFileName);
 		if (!str.equals("first"))
@@ -884,7 +909,11 @@ public class DavisBasePromptExample
 			/*  Create RandomAccessFile tableFile in read-write mode.
 			 *  Note that this doesn't create the table file in the correct directory structure
 			 */
-				RandomAccessFile tableFile = new RandomAccessFile(tableFileName, "rw");
+				if (tableName.equals("davisbase_columns"))
+					pageSize=1536;
+				else
+					pageSize=512;
+				RandomAccessFile tableFile = new RandomAccessFile(path+tableFileName, "rw");
 				tableFile.setLength(pageSize);
 	//			int recordLocation = 0;
 	//			int currentPage = 0;
@@ -981,13 +1010,14 @@ public class DavisBasePromptExample
 			return sqlcode;
 		}
 		String tableName=tokens.get(i++);
-		
-		if (tableName.equals("davisbase_columns"))
-			pageSize=2048;
+		String path=null;
+		if (tableName.equals("davisbase_columns") || tableName.equals("davisbase_tables"))
+			path="data/catalog/";
 		else
-			pageSize=512;
+			path="data/user_data/";
+		
 		String tableFileName =  tableName+ ".tbl";
-		File f = new File(tableFileName);
+		File f = new File(path+tableFileName);
 		if (!f.exists())
 		{
 			sqlcode=-102;
@@ -1036,7 +1066,11 @@ public class DavisBasePromptExample
 		
 		try
 		{
-			tableFile = new RandomAccessFile(tableFileName, "rw");
+			if (tableName.equals("davisbase_columns"))
+				pageSize=1536;
+			else
+				pageSize=512;
+			tableFile = new RandomAccessFile(path+tableFileName, "rw");
 			String [][] table_name=null;
 			if (hasWhere)
 				table_name=parseQueryString("select "+primary_key_column+" from "+tableName+" where "+clause);
@@ -1132,12 +1166,16 @@ public class DavisBasePromptExample
 				return -101;
 			}
 			String tableName=createTokens.get(i++);
-			if (tableName.equals("davisbase_columns"))
-				pageSize=2048;
+			
+			String path=null;
+			if (tableName.equals("davisbase_columns") || tableName.equals("davisbase_tables"))
+				path="data/catalog/";
 			else
-				pageSize=512;
+				path="data/user_data/";
+			
+			
 			String tableFileName = tableName+ ".tbl";
-			File f = new File(tableFileName);
+			File f = new File(path+tableFileName);
 			if (!f.exists())
 				return -102;
 			
@@ -1224,8 +1262,12 @@ public class DavisBasePromptExample
 				return -101;
 			}
 //			System.out.println(column_value_list);	
+			if (tableName.equals("davisbase_columns"))
+				pageSize=1536;
+			else
+				pageSize=512;
 			
-			tableFile = new RandomAccessFile(tableFileName, "rw");
+			tableFile = new RandomAccessFile(path+tableFileName, "rw");
 			tableFile.setLength(pageSize);
 			
 			//Calculate the number of columns to write
@@ -1488,12 +1530,15 @@ public class DavisBasePromptExample
 				
 			}
 			String tableName=createTokens.get(i++);
-			if (tableName.equals("davisbase_columns"))
-				pageSize=2048;
+			
+			String path=null;
+			if (tableName.equals("davisbase_columns") || tableName.equals("davisbase_tables"))
+				path="data/catalog/";
 			else
-				pageSize=512;
+				path="data/user_data/";
+			
 			String tableFileName = tableName+ ".tbl";
-			File f = new File(tableFileName);
+			File f = new File(path+tableFileName);
 			if (!f.exists())
 			{
 				sqlcode=-102;
@@ -1571,8 +1616,12 @@ public class DavisBasePromptExample
 				return sqlcode;
 			}
 //			System.out.println(column_value_list);	
+			if (tableName.equals("davisbase_columns"))
+				pageSize=1536;
+			else
+				pageSize=512;
 			
-			tableFile = new RandomAccessFile(tableFileName, "rw");
+			tableFile = new RandomAccessFile(path+tableFileName, "rw");
 			tableFile.setLength(pageSize);
 			
 			//Calculate the number of columns to write
@@ -1757,12 +1806,15 @@ public class DavisBasePromptExample
 		ArrayList<String> tokens = new ArrayList<String>(Arrays.asList(queryString.split(" ")));
 		
 		String tableName=tokens.get(i++);
-		if (tableName.equals("davisbase_columns"))
-			pageSize=2048;
+		
+		String path=null;
+		if (tableName.equals("davisbase_columns") || tableName.equals("davisbase_tables"))
+			path="data/catalog/";
 		else
-			pageSize=512;
+			path="data/user_data/";
+		
 		String tableFileName =  tableName+ ".tbl";
-		File f = new File(tableFileName);
+		File f = new File(path+tableFileName);
 		if (!f.exists())
 		{
 			sqlcode=-102;
@@ -1938,7 +1990,11 @@ public class DavisBasePromptExample
 		}
 		try 
 		{
-			tableFile = new RandomAccessFile(tableFileName, "rw");
+			if (tableName.equals("davisbase_columns"))
+				pageSize=1536;
+			else
+				pageSize=512;
+			tableFile = new RandomAccessFile(path+tableFileName, "rw");
 			if (hasWhere)
 				table_name=parseQueryString("select "+primary_key_column+" from "+tableName+" where "+clause);
 			else
